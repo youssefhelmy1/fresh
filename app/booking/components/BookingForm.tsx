@@ -33,38 +33,18 @@ const generateTimeSlots = () => {
 const timeSlots = generateTimeSlots()
 
 const PAYPAL_ME_LINK = 'https://paypal.me/yousefhelmymusic'
+const PAYONEER_EMAIL = 'your.payoneer.email@example.com' // Replace with your Payoneer email
 
 export default function BookingForm() {
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null)
-  const [paymentMethod, setPaymentMethod] = useState<'checkout' | 'paypal' | null>(null)
+  const [paymentMethod, setPaymentMethod] = useState<'payoneer' | 'paypal' | null>(null)
   const [loading, setLoading] = useState(false)
   const [selectedDay, setSelectedDay] = useState<string>('Monday')
+  const [showPayoneerInstructions, setShowPayoneerInstructions] = useState(false)
 
-  const handlePayWithCheckout = async () => {
+  const handlePayWithPayoneer = () => {
     if (!selectedSlot) return
-    setLoading(true)
-
-    try {
-      // Create payment session
-      const response = await fetch('/api/create-payment-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: 2500, // $25.00
-          timeSlot: `${selectedSlot.day} at ${selectedSlot.time}`,
-        }),
-      })
-
-      const { url } = await response.json()
-
-      // Redirect to Checkout.com hosted payment page
-      window.location.href = url
-    } catch (err) {
-      console.error('Error creating payment session:', err)
-      setLoading(false)
-    }
+    setShowPayoneerInstructions(true)
   }
 
   const handlePayWithPayPal = () => {
@@ -129,26 +109,25 @@ export default function BookingForm() {
           <div className="space-y-4">
             <button
               onClick={() => {
-                setPaymentMethod('checkout')
-                handlePayWithCheckout()
+                setPaymentMethod('payoneer')
+                handlePayWithPayoneer()
               }}
-              disabled={loading}
               className={`w-full p-4 rounded-lg border transition-colors ${
-                loading
-                  ? 'opacity-50 cursor-not-allowed'
-                  : paymentMethod === 'checkout'
+                paymentMethod === 'payoneer'
                   ? 'border-blue-500 bg-white shadow-md'
                   : 'border-gray-200 hover:border-gray-300 bg-white'
               }`}
             >
               <span className="flex items-center justify-center">
-                <span className="mr-2">Pay with Card or Bank Transfer</span>
-                {loading && (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-                )}
+                <img 
+                  src="/payoneer-logo.png" 
+                  alt="Payoneer" 
+                  className="h-6 mr-2"
+                />
+                <span>Pay with Payoneer</span>
               </span>
               <span className="text-sm text-gray-500 block mt-1">
-                (Visa, Mastercard, Bank Transfer)
+                (Preferred payment method)
               </span>
             </button>
 
@@ -174,10 +153,35 @@ export default function BookingForm() {
             </button>
           </div>
 
+          {showPayoneerInstructions && (
+            <div className="mt-6 p-4 bg-white rounded-lg border border-blue-200">
+              <h4 className="font-medium text-lg mb-3">Payoneer Payment Instructions</h4>
+              <div className="space-y-3 text-gray-600">
+                <p>Please follow these steps to complete your payment:</p>
+                <ol className="list-decimal list-inside space-y-2">
+                  <li>Log in to your Payoneer account</li>
+                  <li>Select "Make a Payment"</li>
+                  <li>Enter the following email: <span className="font-medium text-gray-800">{PAYONEER_EMAIL}</span></li>
+                  <li>Enter the amount: <span className="font-medium text-gray-800">$25.00 USD</span></li>
+                  <li>In the description, enter: <span className="font-medium text-gray-800">Guitar Lesson - {selectedSlot.day} at {selectedSlot.time}</span></li>
+                </ol>
+                <div className="mt-4 text-sm bg-yellow-50 p-3 rounded border border-yellow-200">
+                  <p>⚠️ Important: After making the payment, please take a screenshot or note down the payment reference number.</p>
+                </div>
+                <button
+                  onClick={() => window.location.href = '/booking/success'}
+                  className="mt-4 w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700"
+                >
+                  I've Completed the Payment
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="mt-4 text-sm text-gray-500">
             <p>✓ Secure payment processing</p>
             <p>✓ Instant confirmation</p>
-            <p>✓ Bank transfer available for Bahrain banks</p>
+            <p>✓ Multiple payment options available</p>
           </div>
         </div>
       )}
