@@ -2,48 +2,40 @@ import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
 if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not set in environment variables')
+  throw new Error('Missing STRIPE_SECRET_KEY environment variable')
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2025-02-24.acacia',
+  apiVersion: '2023-10-16',
   typescript: true,
 })
 
 export async function POST(request: Request) {
-  if (!process.env.STRIPE_SECRET_KEY) {
-    return NextResponse.json(
-      { error: 'Stripe is not configured' },
-      { status: 500 }
-    )
-  }
-
   try {
     const { payment_intent } = await request.json()
 
     const paymentIntent = await stripe.paymentIntents.retrieve(payment_intent)
 
     if (paymentIntent.status === 'succeeded') {
-      // Payment was successful
       return NextResponse.json({
         success: true,
         payment: {
-          amount: paymentIntent.amount / 100, // Convert from cents to dollars
-          description: paymentIntent.metadata.timeSlot,
-          date: new Date(paymentIntent.created * 1000).toLocaleString(),
+          amount: paymentIntent.amount,
+          currency: paymentIntent.currency,
+          description: paymentIntent.description,
+          status: paymentIntent.status,
         },
       })
     } else {
-      // Payment failed or is pending
       return NextResponse.json({
         success: false,
-        error: 'Payment has not been completed',
+        error: `Payment status is ${paymentIntent.status}`,
       })
     }
-  } catch (err) {
-    console.error('Error verifying payment:', err)
+  } catch (error) {
+    console.error('Error verifying payment:', error)
     return NextResponse.json(
-      { error: 'Error verifying payment' },
+      { success: false, error: 'Error verifying payment' },
       { status: 500 }
     )
   }
