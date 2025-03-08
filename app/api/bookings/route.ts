@@ -224,4 +224,52 @@ export async function PUT(request: Request) {
       { status: 500 }
     )
   }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const body = await request.json()
+    const { bookingId } = body
+
+    if (!bookingId) {
+      return NextResponse.json(
+        { error: 'Missing required field: bookingId' },
+        { status: 400 }
+      )
+    }
+
+    const bookings = await getBookings()
+    const bookingIndex = bookings.findIndex((b: Booking) => b.id === bookingId)
+
+    if (bookingIndex === -1) {
+      return NextResponse.json(
+        { error: 'Booking not found' },
+        { status: 404 }
+      )
+    }
+
+    // Only allow deletion of pending bookings
+    if (bookings[bookingIndex].paymentStatus === 'confirmed') {
+      return NextResponse.json(
+        { error: 'Cannot delete confirmed bookings' },
+        { status: 400 }
+      )
+    }
+
+    // Remove the booking
+    bookings.splice(bookingIndex, 1)
+
+    const saved = await saveBookings(bookings)
+    if (!saved) {
+      throw new Error('Failed to delete booking')
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Error deleting booking:', error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Error deleting booking' },
+      { status: 500 }
+    )
+  }
 } 

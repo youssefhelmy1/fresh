@@ -20,6 +20,8 @@ export default function SuccessContent() {
         // Get payment reference from user
         const reference = window.prompt('Please enter your payment reference number or transaction ID:')
         if (!reference) {
+          // If user cancels or doesn't provide reference, delete the pending booking
+          await deletePendingBooking(bookingId)
           throw new Error('Payment reference is required')
         }
         setPaymentReference(reference)
@@ -38,6 +40,8 @@ export default function SuccessContent() {
 
         const data = await response.json()
         if (!response.ok) {
+          // If payment verification fails, delete the pending booking
+          await deletePendingBooking(bookingId)
           throw new Error(data.error || 'Failed to confirm payment')
         }
 
@@ -53,6 +57,22 @@ export default function SuccessContent() {
 
     confirmBooking()
   }, [])
+
+  // Helper function to delete a pending booking
+  const deletePendingBooking = async (bookingId: string) => {
+    try {
+      await fetch('/api/bookings', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ bookingId }),
+      })
+      sessionStorage.removeItem('pendingBookingId')
+    } catch (error) {
+      console.error('Error deleting pending booking:', error)
+    }
+  }
 
   if (status === 'verifying') {
     return (

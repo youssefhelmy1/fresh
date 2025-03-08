@@ -62,17 +62,20 @@ export default function BookingForm() {
       }
       const bookings: Booking[] = await response.json()
       
-      // Update slots availability based on bookings
+      // Update slots availability based on CONFIRMED bookings only
       const updatedSlots = slots.map(slot => ({
         ...slot,
         available: !bookings.some(
-          booking => booking.day === slot.day && booking.time === slot.time
+          booking => 
+            booking.day === slot.day && 
+            booking.time === slot.time && 
+            booking.paymentStatus === 'confirmed'
         )
       }))
       
       setSlots(updatedSlots)
 
-      // If selected slot is now booked, clear the selection
+      // If selected slot is now booked (confirmed payment), clear the selection
       if (selectedSlot && !updatedSlots.find(s => 
         s.id === selectedSlot.id && s.available
       )) {
