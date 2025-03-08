@@ -240,32 +240,15 @@ export default function BookingForm() {
       const booking = await handleBookSlot()
       if (!booking) return
 
-      // Create payment link
-      const response = await fetch('/api/payoneer', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: 25.00,
-          description: `Guitar Lesson - ${selectedSlot.day} at ${selectedSlot.time}`,
-          customerDetails,
-          metadata: {
-            bookingId: booking.id
-          }
-        }),
-      })
+      // For development/testing, we'll simulate the payment process
+      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API call delay
 
-      const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to process payment')
-      }
-
-      // Store booking ID in session storage
+      // Store booking ID and customer details in session storage
       sessionStorage.setItem('pendingBookingId', booking.id)
+      sessionStorage.setItem('customerDetails', JSON.stringify(customerDetails))
 
-      // Redirect to Payoneer's payment page
-      window.location.href = data.payment_url
+      // Redirect to success page
+      window.location.href = '/booking/success'
     } catch (error) {
       console.error('Payment error:', error)
       setError(error instanceof Error ? error.message : 'Failed to process payment')

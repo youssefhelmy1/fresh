@@ -11,19 +11,16 @@ export default function SuccessContent() {
   useEffect(() => {
     const confirmBooking = async () => {
       try {
-        // Get the pending booking ID from session storage
+        // Get the pending booking ID and customer details from session storage
         const bookingId = sessionStorage.getItem('pendingBookingId')
+        const customerDetailsStr = sessionStorage.getItem('customerDetails')
+
         if (!bookingId) {
           throw new Error('No pending booking found')
         }
 
-        // Get payment reference from user
-        const reference = window.prompt('Please enter your payment reference number or transaction ID:')
-        if (!reference) {
-          // If user cancels or doesn't provide reference, delete the pending booking
-          await deletePendingBooking(bookingId)
-          throw new Error('Payment reference is required')
-        }
+        // For development/testing, we'll auto-generate a payment reference
+        const reference = `PAY_${Date.now()}`
         setPaymentReference(reference)
 
         // Confirm the payment
@@ -40,13 +37,13 @@ export default function SuccessContent() {
 
         const data = await response.json()
         if (!response.ok) {
-          // If payment verification fails, delete the pending booking
-          await deletePendingBooking(bookingId)
           throw new Error(data.error || 'Failed to confirm payment')
         }
 
-        // Clear the pending booking ID
+        // Clear the session storage
         sessionStorage.removeItem('pendingBookingId')
+        sessionStorage.removeItem('customerDetails')
+        
         setStatus('confirmed')
       } catch (error) {
         console.error('Error confirming payment:', error)
