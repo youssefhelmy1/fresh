@@ -128,7 +128,8 @@ export default function BookingForm() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to book slot')
+        console.error('Booking failed:', data)
+        throw new Error(data.error || 'Failed to book slot. Please try again.')
       }
 
       console.log('Booking successful:', data)
@@ -142,11 +143,16 @@ export default function BookingForm() {
       return true
     } catch (error) {
       console.error('Booking error:', error)
-      const message = error instanceof Error ? error.message : 'Failed to book slot'
+      const message = error instanceof Error ? error.message : 'Failed to book slot. Please try again.'
       setError(message)
-      setSelectedSlot(null)
-      setPaymentMethod(null)
-      setShowPayoneerInstructions(false)
+      
+      // Only clear selection if it's not a temporary error
+      if (message.includes('already booked') || message.includes('Failed to save')) {
+        setSelectedSlot(null)
+        setPaymentMethod(null)
+        setShowPayoneerInstructions(false)
+      }
+      
       return false
     } finally {
       setLoading(false)

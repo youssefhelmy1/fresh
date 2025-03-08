@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
 import fs from 'fs/promises'
 import path from 'path'
+import os from 'os'
 
-const DATA_DIR = path.join(process.cwd(), 'data')
+// Use system temp directory instead of project directory
+const DATA_DIR = path.join(os.tmpdir(), 'guitar-lessons')
 const BOOKINGS_FILE = path.join(DATA_DIR, 'bookings.json')
 
 // Helper function to ensure data directory and file exist
@@ -13,14 +15,20 @@ async function ensureDataStructures() {
       await fs.access(DATA_DIR)
     } catch {
       await fs.mkdir(DATA_DIR, { recursive: true })
+      console.log('Created data directory:', DATA_DIR)
     }
 
     // Check if bookings file exists, create if it doesn't
     try {
       await fs.access(BOOKINGS_FILE)
     } catch {
-      await fs.writeFile(BOOKINGS_FILE, '[]')
+      await fs.writeFile(BOOKINGS_FILE, '[]', { mode: 0o666 })
+      console.log('Created bookings file:', BOOKINGS_FILE)
     }
+
+    // Verify we can read and write
+    await fs.access(BOOKINGS_FILE, fs.constants.R_OK | fs.constants.W_OK)
+    console.log('Verified read/write access to bookings file')
 
     return true
   } catch (error) {
@@ -32,8 +40,9 @@ async function ensureDataStructures() {
 // Helper function to read bookings
 async function getBookings() {
   try {
+    await ensureDataStructures()
     const data = await fs.readFile(BOOKINGS_FILE, 'utf-8')
-    return JSON.parse(data)
+    return JSON.parse(data || '[]')
   } catch (error) {
     console.error('Error reading bookings:', error)
     return []
@@ -43,7 +52,12 @@ async function getBookings() {
 // Helper function to write bookings
 async function saveBookings(bookings: any[]) {
   try {
-    await fs.writeFile(BOOKINGS_FILE, JSON.stringify(bookings, null, 2))
+    await ensureDataStructures()
+    await fs.writeFile(BOOKINGS_FILE, JSON.stringify(bookings, null, 2), {
+      mode: 0o666, // Read/write for everyone
+      flag: 'w'    // Open for writing, create if doesn't exist
+    })
+    console.log('Successfully saved bookings')
     return true
   } catch (error) {
     console.error('Error writing bookings:', error)
@@ -75,7 +89,6 @@ function validateBookingRequest(day: string, time: string) {
 
 export async function GET() {
   try {
-    await ensureDataStructures()
     const bookings = await getBookings()
     return NextResponse.json(bookings)
   } catch (error) {
@@ -89,12 +102,6 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    // Ensure data structures exist
-    const structuresReady = await ensureDataStructures()
-    if (!structuresReady) {
-      throw new Error('Could not initialize data structures')
-    }
-
     // Parse request body
     const body = await request.json()
     console.log('Received booking request:', body)
@@ -144,7 +151,7 @@ export async function POST(request: Request) {
     // Save bookings
     const saved = await saveBookings(bookings)
     if (!saved) {
-      throw new Error('Failed to save booking')
+      throw new Error('Failed to save booking - check server logs for details')
     }
 
     console.log('Successfully created booking:', newBooking)
