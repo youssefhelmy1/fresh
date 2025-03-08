@@ -7,6 +7,16 @@ import os from 'os'
 const DATA_DIR = path.join(os.tmpdir(), 'guitar-lessons')
 const BOOKINGS_FILE = path.join(DATA_DIR, 'bookings.json')
 
+interface Booking {
+  id: string
+  day: string
+  time: string
+  bookedAt: string
+  paymentStatus: 'pending' | 'confirmed'
+  paymentMethod: 'paypal' | 'payoneer'
+  paymentReference?: string
+}
+
 // Helper function to ensure data directory and file exist
 async function ensureDataStructures() {
   try {
@@ -106,10 +116,10 @@ export async function POST(request: Request) {
     const body = await request.json()
     console.log('Received booking request:', body)
 
-    const { day, time } = body
-    if (!day || !time) {
+    const { day, time, paymentMethod, paymentReference } = body
+    if (!day || !time || !paymentMethod) {
       return NextResponse.json(
-        { error: 'Missing required fields: day and time' },
+        { error: 'Missing required fields: day, time, and paymentMethod' },
         { status: 400 }
       )
     }
@@ -127,9 +137,12 @@ export async function POST(request: Request) {
     const bookings = await getBookings()
     console.log('Current bookings:', bookings)
 
-    // Check if slot is already booked
+    // Check if slot is already booked (only consider confirmed bookings)
     const isBooked = bookings.some(
-      (booking: any) => booking.day === day && booking.time === time
+      (booking: Booking) => 
+        booking.day === day && 
+        booking.time === time && 
+        booking.paymentStatus === 'confirmed'
     )
 
     if (isBooked) {
@@ -139,12 +152,15 @@ export async function POST(request: Request) {
       )
     }
 
-    // Add new booking
-    const newBooking = {
+    // Add new booking with pending status
+    const newBooking: Booking = {
       id: Date.now().toString(),
       day,
       time,
       bookedAt: new Date().toISOString(),
+      paymentStatus: 'pending',
+      paymentMethod,
+      paymentReference
     }
     bookings.push(newBooking)
 
@@ -160,6 +176,51 @@ export async function POST(request: Request) {
     console.error('Error in POST /api/bookings:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Error creating booking' },
+      { status: 500 }
+    )
+  }
+}
+
+// New endpoint to confirm payment
+export async function PUT(request: Request) {
+  try {
+    const body = await request.json()
+    const { bookingId, paymentReference } = body
+
+    if (!bookingId || !paymentReference) {
+      return NextResponse.json(
+        { error: 'Missing required fields: bookingId and paymentReference' },
+        { status: 400 }
+      )
+    }
+
+    const bookings = await getBookings()
+    const bookingIndex = bookings.findIndex((b: Booking) => b.id === bookingId)
+
+    if (bookingIndex === -1) {
+      return NextResponse.json(
+        { error: 'Booking not found' },
+        { status: 404 }
+      )
+    }
+
+    // Update booking status to confirmed
+    bookings[bookingIndex] = {
+      ...bookings[bookingIndex],
+      paymentStatus: 'confirmed',
+      paymentReference
+    }
+
+    const saved = await saveBookings(bookings)
+    if (!saved) {
+      throw new Error('Failed to update booking status')
+    }
+
+    return NextResponse.json(bookings[bookingIndex])
+  } catch (error) {
+    console.error('Error confirming payment:', error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Error confirming payment' },
       { status: 500 }
     )
   }

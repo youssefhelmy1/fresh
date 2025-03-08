@@ -14,6 +14,9 @@ interface Booking {
   day: string
   time: string
   bookedAt: string
+  paymentStatus: 'pending' | 'confirmed'
+  paymentMethod: 'paypal' | 'payoneer'
+  paymentReference?: string
 }
 
 // Generate time slots for each day
@@ -96,7 +99,7 @@ export default function BookingForm() {
   }, [fetchBookedSlots])
 
   const handleBookSlot = async () => {
-    if (!selectedSlot) return
+    if (!selectedSlot || !paymentMethod) return
 
     try {
       setLoading(true)
@@ -109,9 +112,10 @@ export default function BookingForm() {
         throw new Error('This slot has just been booked. Please select another time.')
       }
 
-      console.log('Attempting to book slot:', {
+      console.log('Creating pending booking:', {
         day: selectedSlot.day,
         time: selectedSlot.time,
+        paymentMethod,
       })
 
       const response = await fetch('/api/bookings', {
@@ -122,6 +126,7 @@ export default function BookingForm() {
         body: JSON.stringify({
           day: selectedSlot.day,
           time: selectedSlot.time,
+          paymentMethod,
         }),
       })
 
@@ -129,33 +134,45 @@ export default function BookingForm() {
 
       if (!response.ok) {
         console.error('Booking failed:', data)
-        throw new Error(data.error || 'Failed to book slot. Please try again.')
+        throw new Error(data.error || 'Failed to create booking. Please try again.')
       }
 
-      console.log('Booking successful:', data)
+      console.log('Pending booking created:', data)
+      return data
 
-      // Update local state to mark slot as booked
-      const updatedSlots = slots.map(slot =>
-        slot.id === selectedSlot.id ? { ...slot, available: false } : slot
-      )
-      setSlots(updatedSlots)
+    } catch (error) {
+      console.error('Booking error:', error)
+      const message = error instanceof Error ? error.message : 'Failed to create booking. Please try again.'
+      setError(message)
+      return null
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const confirmPayment = async (bookingId: string, paymentReference: string) => {
+    try {
+      const response = await fetch('/api/bookings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bookingId,
+          paymentReference,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to confirm payment')
+      }
 
       return true
     } catch (error) {
-      console.error('Booking error:', error)
-      const message = error instanceof Error ? error.message : 'Failed to book slot. Please try again.'
-      setError(message)
-      
-      // Only clear selection if it's not a temporary error
-      if (message.includes('already booked') || message.includes('Failed to save')) {
-        setSelectedSlot(null)
-        setPaymentMethod(null)
-        setShowPayoneerInstructions(false)
-      }
-      
+      console.error('Payment confirmation error:', error)
       return false
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -163,9 +180,12 @@ export default function BookingForm() {
     if (!selectedSlot) return
     
     setPaymentMethod('payoneer')
-    const booked = await handleBookSlot()
-    if (booked) {
+    const booking = await handleBookSlot()
+    
+    if (booking) {
       setShowPayoneerInstructions(true)
+      // Store booking ID in session storage for the success page
+      sessionStorage.setItem('pendingBookingId', booking.id)
     }
   }
 
@@ -173,8 +193,12 @@ export default function BookingForm() {
     if (!selectedSlot) return
 
     setPaymentMethod('paypal')
-    const booked = await handleBookSlot()
-    if (booked) {
+    const booking = await handleBookSlot()
+    
+    if (booking) {
+      // Store booking ID in session storage for the success page
+      sessionStorage.setItem('pendingBookingId', booking.id)
+      
       // Open PayPal.me link in a new window
       window.open(
         `${PAYPAL_ME_LINK}/25USD?description=Guitar+Lesson+-+${selectedSlot.day}+at+${encodeURIComponent(selectedSlot.time)}`,
