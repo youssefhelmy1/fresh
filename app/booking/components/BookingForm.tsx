@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 interface TimeSlot {
   id: string
@@ -51,14 +51,12 @@ export default function BookingForm() {
   const [showPayoneerInstructions, setShowPayoneerInstructions] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Fetch booked slots when component mounts
-  useEffect(() => {
-    fetchBookedSlots()
-  }, [])
-
-  const fetchBookedSlots = async () => {
+  const fetchBookedSlots = useCallback(async () => {
     try {
       const response = await fetch('/api/bookings')
+      if (!response.ok) {
+        throw new Error('Failed to fetch bookings')
+      }
       const bookings: Booking[] = await response.json()
       
       // Update slots availability based on bookings
@@ -70,10 +68,32 @@ export default function BookingForm() {
       }))
       
       setSlots(updatedSlots)
+
+      // If selected slot is now booked, clear the selection
+      if (selectedSlot && !updatedSlots.find(s => 
+        s.id === selectedSlot.id && s.available
+      )) {
+        setSelectedSlot(null)
+        setPaymentMethod(null)
+        setShowPayoneerInstructions(false)
+        setError('Sorry, this slot has just been booked by someone else. Please select another time.')
+      }
     } catch (error) {
       console.error('Error fetching booked slots:', error)
+      setError('Unable to check slot availability. Please try again.')
     }
-  }
+  }, [slots, selectedSlot])
+
+  // Fetch booked slots when component mounts
+  useEffect(() => {
+    fetchBookedSlots()
+  }, [fetchBookedSlots])
+
+  // Refresh booking status every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(fetchBookedSlots, 30000)
+    return () => clearInterval(interval)
+  }, [fetchBookedSlots])
 
   const handleBookSlot = async () => {
     if (!selectedSlot) return
@@ -81,6 +101,13 @@ export default function BookingForm() {
     try {
       setLoading(true)
       setError(null)
+
+      // Check if slot is still available before booking
+      await fetchBookedSlots()
+      const currentSlot = slots.find(s => s.id === selectedSlot.id)
+      if (!currentSlot?.available) {
+        throw new Error('This slot has just been booked. Please select another time.')
+      }
 
       const response = await fetch('/api/bookings', {
         method: 'POST',
@@ -106,7 +133,11 @@ export default function BookingForm() {
 
       return true
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to book slot')
+      const message = error instanceof Error ? error.message : 'Failed to book slot'
+      setError(message)
+      setSelectedSlot(null)
+      setPaymentMethod(null)
+      setShowPayoneerInstructions(false)
       return false
     } finally {
       setLoading(false)
@@ -137,6 +168,14 @@ export default function BookingForm() {
     }
   }
 
+  const handleSlotSelect = (slot: TimeSlot) => {
+    if (!slot.available) return
+    setSelectedSlot(slot)
+    setError(null)
+    setPaymentMethod(null)
+    setShowPayoneerInstructions(false)
+  }
+
   const filteredTimeSlots = slots.filter(slot => slot.day === selectedDay)
 
   return (
@@ -154,7 +193,13 @@ export default function BookingForm() {
           {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((day) => (
             <button
               key={day}
-              onClick={() => setSelectedDay(day)}
+              onClick={() => {
+                setSelectedDay(day)
+                setSelectedSlot(null)
+                setPaymentMethod(null)
+                setShowPayoneerInstructions(false)
+                setError(null)
+              }}
               className={`p-2 text-sm rounded-lg border transition-colors ${
                 selectedDay === day
                   ? 'border-blue-500 bg-blue-50 text-blue-700'
@@ -174,8 +219,8 @@ export default function BookingForm() {
           {filteredTimeSlots.map((slot) => (
             <button
               key={slot.id}
-              onClick={() => slot.available ? setSelectedSlot(slot) : null}
-              disabled={!slot.available}
+              onClick={() => handleSlotSelect(slot)}
+              disabled={!slot.available || loading}
               className={`p-3 rounded-lg border text-sm transition-all transform hover:scale-105 ${
                 !slot.available
                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -215,7 +260,7 @@ export default function BookingForm() {
                   alt="Payoneer" 
                   className="h-6 mr-2"
                 />
-                <span>Pay with Payoneer</span>
+                <span>{loading ? 'Processing...' : 'Pay with Payoneer'}</span>
               </span>
               <span className="text-sm text-gray-500 block mt-1">
                 (Preferred payment method)
@@ -241,7 +286,7 @@ export default function BookingForm() {
                   alt="PayPal" 
                   className="h-6 mr-2"
                 />
-                <span>Pay with PayPal</span>
+                <span>{loading ? 'Processing...' : 'Pay with PayPal'}</span>
               </span>
             </button>
           </div>
