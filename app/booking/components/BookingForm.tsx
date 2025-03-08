@@ -15,16 +15,31 @@ interface TimeSlot {
   id: string
   time: string
   available: boolean
+  day: string
 }
 
-const timeSlots: TimeSlot[] = [
-  { id: '1', time: '9:00 AM', available: true },
-  { id: '2', time: '10:00 AM', available: true },
-  { id: '3', time: '11:00 AM', available: true },
-  { id: '4', time: '2:00 PM', available: true },
-  { id: '5', time: '3:00 PM', available: true },
-  { id: '6', time: '4:00 PM', available: true },
-]
+// Generate time slots for each day
+const generateTimeSlots = () => {
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  const slots: TimeSlot[] = []
+  let id = 1
+
+  days.forEach(day => {
+    // Generate slots from 1 PM to 12 AM
+    for (let hour = 13; hour <= 24; hour++) {
+      slots.push({
+        id: String(id++),
+        time: `${hour === 24 ? '12' : hour === 12 ? '12' : hour % 12}:00 ${hour >= 12 ? 'PM' : 'AM'}`,
+        available: true,
+        day: day
+      })
+    }
+  })
+
+  return slots
+}
+
+const timeSlots = generateTimeSlots()
 
 const PAYPAL_ME_LINK = 'https://paypal.me/yousefhelmymusic'
 
@@ -47,6 +62,15 @@ function CheckoutForm() {
       elements,
       confirmParams: {
         return_url: `${window.location.origin}/booking/success`,
+        payment_method_data: {
+          billing_details: {
+            name: 'Yousef Helmy',
+            email: 'contact@yousefhelmy.com',
+            address: {
+              country: 'BH',
+            },
+          },
+        },
       },
     })
 
@@ -57,13 +81,19 @@ function CheckoutForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <PaymentElement />
-      {error && <div className="text-red-500 mt-2">{error}</div>}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="bg-white p-4 rounded-lg border border-gray-200">
+        <PaymentElement />
+      </div>
+      {error && (
+        <div className="bg-red-50 text-red-500 p-3 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
       <button
         type="submit"
         disabled={!stripe || processing}
-        className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 mt-4 disabled:opacity-50"
+        className="w-full bg-blue-600 text-white py-4 px-6 rounded-lg hover:bg-blue-700 mt-4 disabled:opacity-50 text-lg font-medium transition-colors"
       >
         {processing ? 'Processing...' : 'Pay $25.00'}
       </button>
@@ -75,6 +105,7 @@ export default function BookingForm() {
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal' | null>(null)
   const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [selectedDay, setSelectedDay] = useState<string>('Monday')
 
   useEffect(() => {
     if (selectedSlot && paymentMethod === 'stripe') {
@@ -85,7 +116,7 @@ export default function BookingForm() {
         },
         body: JSON.stringify({
           amount: 2500, // $25.00
-          timeSlot: selectedSlot.time,
+          timeSlot: `${selectedSlot.day} at ${selectedSlot.time}`,
         }),
       })
         .then((res) => res.json())
@@ -95,25 +126,52 @@ export default function BookingForm() {
   }, [selectedSlot, paymentMethod])
 
   const handlePayWithPayPal = () => {
+    if (!selectedSlot) return
     // Open PayPal.me link in a new window
-    window.open(`${PAYPAL_ME_LINK}/25USD?description=Guitar+Lesson+-+${encodeURIComponent(selectedSlot?.time || '')}`, '_blank')
+    window.open(
+      `${PAYPAL_ME_LINK}/25USD?description=Guitar+Lesson+-+${selectedSlot.day}+at+${encodeURIComponent(selectedSlot.time)}`,
+      '_blank'
+    )
     // Redirect to success page
     window.location.href = '/booking/success'
   }
 
+  const filteredTimeSlots = timeSlots.filter(slot => slot.day === selectedDay)
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Day Selection */}
       <div>
-        <h3 className="text-lg font-medium mb-4">Select a Time Slot</h3>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-          {timeSlots.map((slot) => (
+        <h3 className="text-lg font-medium mb-4">Select Day</h3>
+        <div className="grid grid-cols-7 gap-2">
+          {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((day) => (
+            <button
+              key={day}
+              onClick={() => setSelectedDay(day)}
+              className={`p-2 text-sm rounded-lg border transition-colors ${
+                selectedDay === day
+                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  : 'border-gray-200 hover:border-gray-300 text-gray-700'
+              }`}
+            >
+              {day.slice(0, 3)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Time Slots */}
+      <div>
+        <h3 className="text-lg font-medium mb-4">Select Time - {selectedDay}</h3>
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+          {filteredTimeSlots.map((slot) => (
             <button
               key={slot.id}
               onClick={() => setSelectedSlot(slot)}
-              className={`p-4 rounded-lg border ${
+              className={`p-3 rounded-lg border text-sm transition-all transform hover:scale-105 ${
                 selectedSlot?.id === slot.id
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                  ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
+                  : 'border-gray-200 hover:border-gray-300 text-gray-700'
               }`}
             >
               {slot.time}
@@ -122,16 +180,17 @@ export default function BookingForm() {
         </div>
       </div>
 
+      {/* Payment Methods */}
       {selectedSlot && (
-        <div>
+        <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
           <h3 className="text-lg font-medium mb-4">Select Payment Method</h3>
           <div className="space-y-4">
             <button
               onClick={() => setPaymentMethod('stripe')}
-              className={`w-full p-4 rounded-lg border ${
+              className={`w-full p-4 rounded-lg border transition-colors ${
                 paymentMethod === 'stripe'
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                  ? 'border-blue-500 bg-white shadow-md'
+                  : 'border-gray-200 hover:border-gray-300 bg-white'
               }`}
             >
               <span className="flex items-center justify-center">
@@ -145,10 +204,10 @@ export default function BookingForm() {
                 setPaymentMethod('paypal')
                 handlePayWithPayPal()
               }}
-              className={`w-full p-4 rounded-lg border flex items-center justify-center ${
+              className={`w-full p-4 rounded-lg border flex items-center justify-center transition-colors ${
                 paymentMethod === 'paypal'
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                  ? 'border-blue-500 bg-white shadow-md'
+                  : 'border-gray-200 hover:border-gray-300 bg-white'
               }`}
             >
               <span className="flex items-center justify-center">
@@ -164,8 +223,9 @@ export default function BookingForm() {
         </div>
       )}
 
+      {/* Stripe Payment Form */}
       {selectedSlot && paymentMethod === 'stripe' && clientSecret && (
-        <div className="mt-4">
+        <div className="mt-6">
           <Elements stripe={stripePromise} options={{ clientSecret }}>
             <CheckoutForm />
           </Elements>
