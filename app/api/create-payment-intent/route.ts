@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2023-10-16',
+  apiVersion: '2025-02-24.acacia',
+  typescript: true,
 })
 
 export async function POST(request: Request) {
@@ -12,6 +13,9 @@ export async function POST(request: Request) {
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
       currency: 'usd',
+      automatic_payment_methods: {
+        enabled: true,
+      },
       metadata: {
         timeSlot,
       },

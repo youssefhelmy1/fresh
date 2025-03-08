@@ -1,7 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { loadStripe } from '@stripe/stripe-js'
+import {
+  Elements,
+  PaymentElement,
+  useStripe,
+  useElements,
+} from '@stripe/react-stripe-js'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '')
 
@@ -22,15 +28,57 @@ const timeSlots: TimeSlot[] = [
 
 const PAYPAL_ME_LINK = 'https://paypal.me/yousefhelmymusic'
 
+function CheckoutForm() {
+  const stripe = useStripe()
+  const elements = useElements()
+  const [error, setError] = useState<string | null>(null)
+  const [processing, setProcessing] = useState(false)
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+
+    if (!stripe || !elements) {
+      return
+    }
+
+    setProcessing(true)
+
+    const { error: submitError } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/booking/success`,
+      },
+    })
+
+    if (submitError) {
+      setError(submitError.message || 'An error occurred')
+      setProcessing(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <PaymentElement />
+      {error && <div className="text-red-500 mt-2">{error}</div>}
+      <button
+        type="submit"
+        disabled={!stripe || processing}
+        className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 mt-4 disabled:opacity-50"
+      >
+        {processing ? 'Processing...' : 'Pay $25.00'}
+      </button>
+    </form>
+  )
+}
+
 export default function BookingForm() {
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal' | null>(null)
+  const [clientSecret, setClientSecret] = useState<string | null>(null)
 
-  const handlePayWithStripe = async () => {
-    if (!selectedSlot) return
-
-    try {
-      const response = await fetch('/api/create-payment-intent', {
+  useEffect(() => {
+    if (selectedSlot && paymentMethod === 'stripe') {
+      fetch('/api/create-payment-intent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -40,31 +88,11 @@ export default function BookingForm() {
           timeSlot: selectedSlot.time,
         }),
       })
-
-      const { clientSecret } = await response.json()
-      const stripe = await stripePromise
-
-      if (stripe) {
-        const { error } = await stripe.confirmPayment({
-          elements: await stripe.elements({
-            clientSecret,
-            appearance: {
-              theme: 'stripe',
-            },
-          }),
-          confirmParams: {
-            return_url: `${window.location.origin}/booking/success`,
-          },
-        })
-
-        if (error) {
-          console.error('Payment failed:', error)
-        }
-      }
-    } catch (err) {
-      console.error('Error processing payment:', err)
+        .then((res) => res.json())
+        .then((data) => setClientSecret(data.clientSecret))
+        .catch((err) => console.error('Error:', err))
     }
-  }
+  }, [selectedSlot, paymentMethod])
 
   const handlePayWithPayPal = () => {
     // Open PayPal.me link in a new window
@@ -136,13 +164,12 @@ export default function BookingForm() {
         </div>
       )}
 
-      {selectedSlot && paymentMethod === 'stripe' && (
-        <button
-          onClick={handlePayWithStripe}
-          className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700"
-        >
-          Pay $25.00
-        </button>
+      {selectedSlot && paymentMethod === 'stripe' && clientSecret && (
+        <div className="mt-4">
+          <Elements stripe={stripePromise} options={{ clientSecret }}>
+            <CheckoutForm />
+          </Elements>
+        </div>
       )}
     </div>
   )

@@ -16,6 +16,7 @@
     "@headlessui/react": "^1.7.18",
     "@heroicons/react": "^2.1.1",
     "@paypal/react-paypal-js": "^8.8.2",
+    "@stripe/react-stripe-js": "^3.3.0",
     "@stripe/stripe-js": "^5.10.0",
     "date-fns": "^3.3.1",
     "next": "14.1.0",
