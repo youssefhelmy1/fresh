@@ -4,7 +4,7 @@
   "private": true,
   "engines": {
     "node": ">=18.17.0",
-    "npm": ">=9.0.0"
+    "npm": ">=9.6.7"
   },
   "scripts": {
     "dev": "next dev",
@@ -26,6 +26,7 @@
     "stripe": "^17.7.0"
   },
   "devDependencies": {
+    "@netlify/plugin-nextjs": "^5.9.4",
     "@types/node": "^20.17.23",
     "@types/react": "^18.3.18",
     "@types/react-big-calendar": "^1.8.8",
