@@ -25,12 +25,22 @@ export default function SuccessPage() {
           </div>
           
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Booking Confirmed!
+            Booking Initiated!
           </h1>
           
-          <p className="text-lg text-gray-600 mb-8">
-            Thank you for booking your guitar lesson. We've sent you an email with all the details.
-          </p>
+          <div className="text-lg text-gray-600 mb-8 space-y-4">
+            <p>
+              Thank you for booking your guitar lesson. If you paid with a credit card,
+              your booking is confirmed and you'll receive an email with the details.
+            </p>
+            <p>
+              If you chose PayPal, please complete your payment in the PayPal window.
+              Once the payment is complete, your booking will be confirmed.
+            </p>
+            <p className="text-sm">
+              Note: If you don't see the PayPal window, please check if it was blocked by your browser.
+            </p>
+          </div>
 
           <div className="space-y-4">
             <Link

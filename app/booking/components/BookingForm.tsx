@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js'
 import { loadStripe } from '@stripe/stripe-js'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '')
@@ -20,6 +19,8 @@ const timeSlots: TimeSlot[] = [
   { id: '5', time: '3:00 PM', available: true },
   { id: '6', time: '4:00 PM', available: true },
 ]
+
+const PAYPAL_ME_LINK = 'https://paypal.me/yousefhelmymusic'
 
 export default function BookingForm() {
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null)
@@ -65,6 +66,13 @@ export default function BookingForm() {
     }
   }
 
+  const handlePayWithPayPal = () => {
+    // Open PayPal.me link in a new window
+    window.open(`${PAYPAL_ME_LINK}/25USD?description=Guitar+Lesson+-+${encodeURIComponent(selectedSlot?.time || '')}`, '_blank')
+    // Redirect to success page
+    window.location.href = '/booking/success'
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -104,45 +112,26 @@ export default function BookingForm() {
               </span>
             </button>
 
-            <div
-              className={`w-full p-4 rounded-lg border ${
+            <button
+              onClick={() => {
+                setPaymentMethod('paypal')
+                handlePayWithPayPal()
+              }}
+              className={`w-full p-4 rounded-lg border flex items-center justify-center ${
                 paymentMethod === 'paypal'
                   ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200'
+                  : 'border-gray-200 hover:border-gray-300'
               }`}
             >
-              <PayPalScriptProvider
-                options={{
-                  clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || '',
-                  currency: 'USD',
-                }}
-              >
-                <PayPalButtons
-                  style={{ layout: 'horizontal' }}
-                  createOrder={(data, actions) => {
-                    if (!actions.order) return Promise.reject('Order actions not available')
-                    return actions.order.create({
-                      intent: 'CAPTURE',
-                      purchase_units: [
-                        {
-                          amount: {
-                            currency_code: 'USD',
-                            value: '25.00',
-                          },
-                          description: `Guitar Lesson - ${selectedSlot.time}`,
-                        },
-                      ],
-                    })
-                  }}
-                  onApprove={(data, actions) => {
-                    if (!actions.order) return Promise.reject('Order actions not available')
-                    return actions.order.capture().then((details) => {
-                      window.location.href = '/booking/success'
-                    })
-                  }}
+              <span className="flex items-center justify-center">
+                <img 
+                  src="/paypal-logo.png" 
+                  alt="PayPal" 
+                  className="h-6 mr-2"
                 />
-              </PayPalScriptProvider>
-            </div>
+                <span>Pay with PayPal</span>
+              </span>
+            </button>
           </div>
         </div>
       )}
