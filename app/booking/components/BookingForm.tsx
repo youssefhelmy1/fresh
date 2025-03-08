@@ -1,12 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface TimeSlot {
   id: string
   time: string
   available: boolean
   day: string
+}
+
+interface Booking {
+  id: string
+  day: string
+  time: string
+  bookedAt: string
 }
 
 // Generate time slots for each day
@@ -33,35 +40,113 @@ const generateTimeSlots = () => {
 const timeSlots = generateTimeSlots()
 
 const PAYPAL_ME_LINK = 'https://paypal.me/yousefhelmymusic'
-const PAYONEER_EMAIL = 'helmyyoussef612@gmail.com' // Updated Payoneer email
+const PAYONEER_EMAIL = 'helmyyoussef612@gmail.com'
 
 export default function BookingForm() {
+  const [slots, setSlots] = useState<TimeSlot[]>(timeSlots)
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<'payoneer' | 'paypal' | null>(null)
   const [loading, setLoading] = useState(false)
   const [selectedDay, setSelectedDay] = useState<string>('Monday')
   const [showPayoneerInstructions, setShowPayoneerInstructions] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handlePayWithPayoneer = () => {
-    if (!selectedSlot) return
-    setShowPayoneerInstructions(true)
+  // Fetch booked slots when component mounts
+  useEffect(() => {
+    fetchBookedSlots()
+  }, [])
+
+  const fetchBookedSlots = async () => {
+    try {
+      const response = await fetch('/api/bookings')
+      const bookings: Booking[] = await response.json()
+      
+      // Update slots availability based on bookings
+      const updatedSlots = slots.map(slot => ({
+        ...slot,
+        available: !bookings.some(
+          booking => booking.day === slot.day && booking.time === slot.time
+        )
+      }))
+      
+      setSlots(updatedSlots)
+    } catch (error) {
+      console.error('Error fetching booked slots:', error)
+    }
   }
 
-  const handlePayWithPayPal = () => {
+  const handleBookSlot = async () => {
     if (!selectedSlot) return
-    // Open PayPal.me link in a new window
-    window.open(
-      `${PAYPAL_ME_LINK}/25USD?description=Guitar+Lesson+-+${selectedSlot.day}+at+${encodeURIComponent(selectedSlot.time)}`,
-      '_blank'
-    )
-    // Redirect to success page
-    window.location.href = '/booking/success'
+
+    try {
+      setLoading(true)
+      setError(null)
+
+      const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          day: selectedSlot.day,
+          time: selectedSlot.time,
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to book slot')
+      }
+
+      // Update local state to mark slot as booked
+      const updatedSlots = slots.map(slot =>
+        slot.id === selectedSlot.id ? { ...slot, available: false } : slot
+      )
+      setSlots(updatedSlots)
+
+      return true
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to book slot')
+      return false
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const filteredTimeSlots = timeSlots.filter(slot => slot.day === selectedDay)
+  const handlePayWithPayoneer = async () => {
+    if (!selectedSlot) return
+    
+    const booked = await handleBookSlot()
+    if (booked) {
+      setShowPayoneerInstructions(true)
+    }
+  }
+
+  const handlePayWithPayPal = async () => {
+    if (!selectedSlot) return
+
+    const booked = await handleBookSlot()
+    if (booked) {
+      // Open PayPal.me link in a new window
+      window.open(
+        `${PAYPAL_ME_LINK}/25USD?description=Guitar+Lesson+-+${selectedSlot.day}+at+${encodeURIComponent(selectedSlot.time)}`,
+        '_blank'
+      )
+      // Redirect to success page
+      window.location.href = '/booking/success'
+    }
+  }
+
+  const filteredTimeSlots = slots.filter(slot => slot.day === selectedDay)
 
   return (
     <div className="space-y-8">
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
+
       {/* Day Selection */}
       <div>
         <h3 className="text-lg font-medium mb-4">Select Day</h3>
@@ -89,21 +174,25 @@ export default function BookingForm() {
           {filteredTimeSlots.map((slot) => (
             <button
               key={slot.id}
-              onClick={() => setSelectedSlot(slot)}
+              onClick={() => slot.available ? setSelectedSlot(slot) : null}
+              disabled={!slot.available}
               className={`p-3 rounded-lg border text-sm transition-all transform hover:scale-105 ${
-                selectedSlot?.id === slot.id
+                !slot.available
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : selectedSlot?.id === slot.id
                   ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
                   : 'border-gray-200 hover:border-gray-300 text-gray-700'
               }`}
             >
               {slot.time}
+              {!slot.available && <span className="block text-xs mt-1">(Booked)</span>}
             </button>
           ))}
         </div>
       </div>
 
       {/* Payment Methods */}
-      {selectedSlot && (
+      {selectedSlot && selectedSlot.available && (
         <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
           <h3 className="text-lg font-medium mb-4">Select Payment Method</h3>
           <div className="space-y-4">
@@ -112,7 +201,9 @@ export default function BookingForm() {
                 setPaymentMethod('payoneer')
                 handlePayWithPayoneer()
               }}
+              disabled={loading}
               className={`w-full p-4 rounded-lg border transition-colors ${
+                loading ? 'opacity-50 cursor-not-allowed' :
                 paymentMethod === 'payoneer'
                   ? 'border-blue-500 bg-white shadow-md'
                   : 'border-gray-200 hover:border-gray-300 bg-white'
@@ -136,7 +227,9 @@ export default function BookingForm() {
                 setPaymentMethod('paypal')
                 handlePayWithPayPal()
               }}
+              disabled={loading}
               className={`w-full p-4 rounded-lg border flex items-center justify-center transition-colors ${
+                loading ? 'opacity-50 cursor-not-allowed' :
                 paymentMethod === 'paypal'
                   ? 'border-blue-500 bg-white shadow-md'
                   : 'border-gray-200 hover:border-gray-300 bg-white'

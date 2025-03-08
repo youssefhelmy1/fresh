@@ -5,7 +5,6 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
 export default function SuccessContent() {
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [paymentDetails, setPaymentDetails] = useState<any>(null)
   const searchParams = useSearchParams()
 
@@ -28,65 +27,12 @@ export default function SuccessContent() {
         .then((res) => res.json())
         .then((data) => {
           if (data.success) {
-            setStatus('success')
             setPaymentDetails(data.payment)
-          } else {
-            setStatus('error')
           }
         })
-        .catch(() => setStatus('error'))
-    } else {
-      // PayPal or Payoneer payment
-      setStatus('success')
+        .catch(console.error)
     }
   }, [searchParams])
-
-  if (status === 'error') {
-    return (
-      <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <svg
-            className="w-8 h-8 text-red-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </div>
-        
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          Payment Failed
-        </h1>
-        
-        <p className="text-lg text-gray-600 mb-8">
-          There was an issue processing your payment. Please try again or contact support.
-        </p>
-
-        <div className="space-y-4">
-          <Link
-            href="/booking"
-            className="block w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700"
-          >
-            Try Again
-          </Link>
-          
-          <Link
-            href="/"
-            className="block w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200"
-          >
-            Return to Home
-          </Link>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-8 text-center">
