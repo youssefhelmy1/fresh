@@ -144,7 +144,7 @@ export default function BookingForm() {
             >
               <span className="flex items-center justify-center">
                 <img 
-                  src="/paypal-logo.png" 
+                  src="/paypal-logo.jpg" 
                   alt="PayPal" 
                   className="h-6 mr-2"
                 />
