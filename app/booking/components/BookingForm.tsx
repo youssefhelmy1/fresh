@@ -33,7 +33,7 @@ const generateTimeSlots = () => {
 const timeSlots = generateTimeSlots()
 
 const PAYPAL_ME_LINK = 'https://paypal.me/yousefhelmymusic'
-const PAYONEER_EMAIL = 'your.payoneer.email@example.com' // Replace with your Payoneer email
+const PAYONEER_EMAIL = 'helmyyoussef612@gmail.com' // Updated Payoneer email
 
 export default function BookingForm() {
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null)
