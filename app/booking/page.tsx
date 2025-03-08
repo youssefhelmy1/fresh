@@ -1,18 +1,30 @@
-import { Calendar, dateFnsLocalizer } from 'react-big-calendar'
+'use client'
+
+import dynamic from 'next/dynamic'
 import { format, parse, startOfWeek, getDay } from 'date-fns'
 import { enUS } from 'date-fns/locale'
+
+// Import the CSS file here since we're in a client component
 import 'react-big-calendar/lib/css/react-big-calendar.css'
 
 const locales = {
   'en-US': enUS,
 }
 
+// Create the localizer outside of the component
+import { dateFnsLocalizer } from 'react-big-calendar'
 const localizer = dateFnsLocalizer({
   format,
   parse,
   startOfWeek,
   getDay,
   locales,
+})
+
+// Dynamically import the Calendar component with no SSR
+const DynamicCalendar = dynamic(() => import('./components/DynamicCalendar'), {
+  ssr: false,
+  loading: () => <div>Loading calendar...</div>
 })
 
 export default function BookingPage() {
@@ -29,19 +41,7 @@ export default function BookingPage() {
             </p>
           </div>
           <div className="h-[600px]">
-            <Calendar
-              localizer={localizer}
-              events={[]}
-              startAccessor="start"
-              endAccessor="end"
-              views={['week', 'day']}
-              defaultView="week"
-              min={new Date(0, 0, 0, 9, 0, 0)} // 9:00 AM
-              max={new Date(0, 0, 0, 21, 0, 0)} // 9:00 PM
-              step={60}
-              timeslots={1}
-              className="rounded-lg"
-            />
+            <DynamicCalendar localizer={localizer} />
           </div>
           <div className="mt-8">
             <h3 className="text-xl font-semibold mb-4">Booking Instructions</h3>
