@@ -19,6 +19,12 @@ interface Booking {
   paymentReference?: string
 }
 
+interface CustomerDetails {
+  firstName: string
+  lastName: string
+  email: string
+}
+
 // Generate time slots for each day
 const generateTimeSlots = () => {
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
@@ -53,6 +59,8 @@ export default function BookingForm() {
   const [selectedDay, setSelectedDay] = useState<string>('Monday')
   const [showPayoneerInstructions, setShowPayoneerInstructions] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [customerDetails, setCustomerDetails] = useState<CustomerDetails | null>(null)
+  const [showCustomerForm, setShowCustomerForm] = useState(false)
 
   const fetchBookedSlots = useCallback(async () => {
     try {
@@ -212,6 +220,59 @@ export default function BookingForm() {
     }
   }
 
+  const handlePayWithCard = async () => {
+    if (!selectedSlot) return
+    
+    setPaymentMethod('payoneer')
+    setShowCustomerForm(true)
+  }
+
+  const handleCardPayment = async (customerDetails: CustomerDetails) => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      if (!selectedSlot) {
+        throw new Error('No slot selected')
+      }
+
+      // Create pending booking first
+      const booking = await handleBookSlot()
+      if (!booking) return
+
+      // Create payment link
+      const response = await fetch('/api/payoneer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: 25.00,
+          description: `Guitar Lesson - ${selectedSlot.day} at ${selectedSlot.time}`,
+          customerDetails,
+          metadata: {
+            bookingId: booking.id
+          }
+        }),
+      })
+
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to process payment')
+      }
+
+      // Store booking ID in session storage
+      sessionStorage.setItem('pendingBookingId', booking.id)
+
+      // Redirect to Payoneer's payment page
+      window.location.href = data.payment_url
+    } catch (error) {
+      console.error('Payment error:', error)
+      setError(error instanceof Error ? error.message : 'Failed to process payment')
+      setLoading(false)
+    }
+  }
+
   const handleSlotSelect = (slot: TimeSlot) => {
     if (!slot.available) return
     setSelectedSlot(slot)
@@ -286,14 +347,11 @@ export default function BookingForm() {
           <h3 className="text-lg font-medium mb-4">Select Payment Method</h3>
           <div className="space-y-4">
             <button
-              onClick={() => {
-                setPaymentMethod('payoneer')
-                handlePayWithPayoneer()
-              }}
+              onClick={handlePayWithCard}
               disabled={loading}
               className={`w-full p-4 rounded-lg border transition-colors ${
                 loading ? 'opacity-50 cursor-not-allowed' :
-                paymentMethod === 'payoneer'
+                paymentMethod === 'payoneer' && !showCustomerForm
                   ? 'border-blue-500 bg-white shadow-md'
                   : 'border-gray-200 hover:border-gray-300 bg-white'
               }`}
@@ -304,10 +362,10 @@ export default function BookingForm() {
                   alt="Payoneer" 
                   className="h-6 mr-2"
                 />
-                <span>{loading ? 'Processing...' : 'Pay with Payoneer'}</span>
+                <span>{loading ? 'Processing...' : 'Pay with Card'}</span>
               </span>
               <span className="text-sm text-gray-500 block mt-1">
-                (Preferred payment method)
+                (Visa, Mastercard, etc.)
               </span>
             </button>
 
@@ -334,6 +392,59 @@ export default function BookingForm() {
               </span>
             </button>
           </div>
+
+          {showCustomerForm && (
+            <div className="mt-6 p-4 bg-white rounded-lg border border-blue-200">
+              <h4 className="font-medium text-lg mb-4">Enter Payment Details</h4>
+              <form onSubmit={(e) => {
+                e.preventDefault()
+                const formData = new FormData(e.currentTarget)
+                handleCardPayment({
+                  firstName: formData.get('firstName') as string,
+                  lastName: formData.get('lastName') as string,
+                  email: formData.get('email') as string
+                })
+              }} className="space-y-4">
+                <div>
+                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">First Name</label>
+                  <input
+                    type="text"
+                    name="firstName"
+                    id="firstName"
+                    required
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">Last Name</label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    id="lastName"
+                    required
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    id="email"
+                    required
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {loading ? 'Processing...' : 'Proceed to Payment'}
+                </button>
+              </form>
+            </div>
+          )}
 
           {showPayoneerInstructions && (
             <div className="mt-6 p-4 bg-white rounded-lg border border-blue-200">
