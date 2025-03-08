@@ -1,37 +1,52 @@
 import { NextResponse } from 'next/server'
-import fs from 'fs'
+import fs from 'fs/promises'
 import path from 'path'
 
-const BOOKINGS_FILE = path.join(process.cwd(), 'data', 'bookings.json')
+const DATA_DIR = path.join(process.cwd(), 'data')
+const BOOKINGS_FILE = path.join(DATA_DIR, 'bookings.json')
 
-// Ensure the data directory exists
-if (!fs.existsSync(path.join(process.cwd(), 'data'))) {
-  fs.mkdirSync(path.join(process.cwd(), 'data'))
-}
-
-// Initialize bookings file if it doesn't exist
-if (!fs.existsSync(BOOKINGS_FILE)) {
-  fs.writeFileSync(BOOKINGS_FILE, JSON.stringify([]))
-}
-
-// Helper function to read bookings with file lock
-function getBookings() {
+// Helper function to ensure data directory and file exist
+async function ensureDataStructures() {
   try {
-    const bookings = fs.readFileSync(BOOKINGS_FILE, 'utf-8')
-    return JSON.parse(bookings)
+    // Check if data directory exists, create if it doesn't
+    try {
+      await fs.access(DATA_DIR)
+    } catch {
+      await fs.mkdir(DATA_DIR, { recursive: true })
+    }
+
+    // Check if bookings file exists, create if it doesn't
+    try {
+      await fs.access(BOOKINGS_FILE)
+    } catch {
+      await fs.writeFile(BOOKINGS_FILE, '[]')
+    }
+
+    return true
   } catch (error) {
-    console.error('Error reading bookings file:', error)
+    console.error('Error ensuring data structures:', error)
+    return false
+  }
+}
+
+// Helper function to read bookings
+async function getBookings() {
+  try {
+    const data = await fs.readFile(BOOKINGS_FILE, 'utf-8')
+    return JSON.parse(data)
+  } catch (error) {
+    console.error('Error reading bookings:', error)
     return []
   }
 }
 
-// Helper function to write bookings with file lock
-function saveBookings(bookings: any[]) {
+// Helper function to write bookings
+async function saveBookings(bookings: any[]) {
   try {
-    fs.writeFileSync(BOOKINGS_FILE, JSON.stringify(bookings, null, 2))
+    await fs.writeFile(BOOKINGS_FILE, JSON.stringify(bookings, null, 2))
     return true
   } catch (error) {
-    console.error('Error writing bookings file:', error)
+    console.error('Error writing bookings:', error)
     return false
   }
 }
@@ -60,10 +75,11 @@ function validateBookingRequest(day: string, time: string) {
 
 export async function GET() {
   try {
-    const bookings = getBookings()
+    await ensureDataStructures()
+    const bookings = await getBookings()
     return NextResponse.json(bookings)
   } catch (error) {
-    console.error('Error fetching bookings:', error)
+    console.error('Error in GET /api/bookings:', error)
     return NextResponse.json(
       { error: 'Error fetching bookings' },
       { status: 500 }
@@ -73,7 +89,23 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { day, time } = await request.json()
+    // Ensure data structures exist
+    const structuresReady = await ensureDataStructures()
+    if (!structuresReady) {
+      throw new Error('Could not initialize data structures')
+    }
+
+    // Parse request body
+    const body = await request.json()
+    console.log('Received booking request:', body)
+
+    const { day, time } = body
+    if (!day || !time) {
+      return NextResponse.json(
+        { error: 'Missing required fields: day and time' },
+        { status: 400 }
+      )
+    }
 
     // Validate request
     const validationError = validateBookingRequest(day, time)
@@ -84,8 +116,9 @@ export async function POST(request: Request) {
       )
     }
 
-    // Get current bookings with file lock
-    const bookings = getBookings()
+    // Get current bookings
+    const bookings = await getBookings()
+    console.log('Current bookings:', bookings)
 
     // Check if slot is already booked
     const isBooked = bookings.some(
@@ -108,17 +141,18 @@ export async function POST(request: Request) {
     }
     bookings.push(newBooking)
 
-    // Save with file lock
-    const saved = saveBookings(bookings)
+    // Save bookings
+    const saved = await saveBookings(bookings)
     if (!saved) {
       throw new Error('Failed to save booking')
     }
 
+    console.log('Successfully created booking:', newBooking)
     return NextResponse.json(newBooking)
   } catch (error) {
-    console.error('Error creating booking:', error)
+    console.error('Error in POST /api/bookings:', error)
     return NextResponse.json(
-      { error: 'Error creating booking' },
+      { error: error instanceof Error ? error.message : 'Error creating booking' },
       { status: 500 }
     )
   }

@@ -109,6 +109,11 @@ export default function BookingForm() {
         throw new Error('This slot has just been booked. Please select another time.')
       }
 
+      console.log('Attempting to book slot:', {
+        day: selectedSlot.day,
+        time: selectedSlot.time,
+      })
+
       const response = await fetch('/api/bookings', {
         method: 'POST',
         headers: {
@@ -120,10 +125,13 @@ export default function BookingForm() {
         }),
       })
 
+      const data = await response.json()
+
       if (!response.ok) {
-        const data = await response.json()
         throw new Error(data.error || 'Failed to book slot')
       }
+
+      console.log('Booking successful:', data)
 
       // Update local state to mark slot as booked
       const updatedSlots = slots.map(slot =>
@@ -133,6 +141,7 @@ export default function BookingForm() {
 
       return true
     } catch (error) {
+      console.error('Booking error:', error)
       const message = error instanceof Error ? error.message : 'Failed to book slot'
       setError(message)
       setSelectedSlot(null)
@@ -147,6 +156,7 @@ export default function BookingForm() {
   const handlePayWithPayoneer = async () => {
     if (!selectedSlot) return
     
+    setPaymentMethod('payoneer')
     const booked = await handleBookSlot()
     if (booked) {
       setShowPayoneerInstructions(true)
@@ -156,6 +166,7 @@ export default function BookingForm() {
   const handlePayWithPayPal = async () => {
     if (!selectedSlot) return
 
+    setPaymentMethod('paypal')
     const booked = await handleBookSlot()
     if (booked) {
       // Open PayPal.me link in a new window
