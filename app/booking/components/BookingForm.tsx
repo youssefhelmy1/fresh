@@ -1,15 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { loadStripe } from '@stripe/stripe-js'
-import {
-  Elements,
-  PaymentElement,
-  useStripe,
-  useElements,
-} from '@stripe/react-stripe-js'
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '')
+import { useState } from 'react'
 
 interface TimeSlot {
   id: string
@@ -43,73 +34,19 @@ const timeSlots = generateTimeSlots()
 
 const PAYPAL_ME_LINK = 'https://paypal.me/yousefhelmymusic'
 
-function CheckoutForm() {
-  const stripe = useStripe()
-  const elements = useElements()
-  const [error, setError] = useState<string | null>(null)
-  const [processing, setProcessing] = useState(false)
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault()
-
-    if (!stripe || !elements) {
-      return
-    }
-
-    setProcessing(true)
-
-    const { error: submitError } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/booking/success`,
-        payment_method_data: {
-          billing_details: {
-            name: 'Yousef Helmy',
-            email: 'contact@yousefhelmy.com',
-            address: {
-              country: 'BH',
-            },
-          },
-        },
-      },
-    })
-
-    if (submitError) {
-      setError(submitError.message || 'An error occurred')
-      setProcessing(false)
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="bg-white p-4 rounded-lg border border-gray-200">
-        <PaymentElement />
-      </div>
-      {error && (
-        <div className="bg-red-50 text-red-500 p-3 rounded-lg text-sm">
-          {error}
-        </div>
-      )}
-      <button
-        type="submit"
-        disabled={!stripe || processing}
-        className="w-full bg-blue-600 text-white py-4 px-6 rounded-lg hover:bg-blue-700 mt-4 disabled:opacity-50 text-lg font-medium transition-colors"
-      >
-        {processing ? 'Processing...' : 'Pay $25.00'}
-      </button>
-    </form>
-  )
-}
-
 export default function BookingForm() {
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null)
-  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal' | null>(null)
-  const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [paymentMethod, setPaymentMethod] = useState<'checkout' | 'paypal' | null>(null)
+  const [loading, setLoading] = useState(false)
   const [selectedDay, setSelectedDay] = useState<string>('Monday')
 
-  useEffect(() => {
-    if (selectedSlot && paymentMethod === 'stripe') {
-      fetch('/api/create-payment-intent', {
+  const handlePayWithCheckout = async () => {
+    if (!selectedSlot) return
+    setLoading(true)
+
+    try {
+      // Create payment session
+      const response = await fetch('/api/create-payment-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -119,11 +56,16 @@ export default function BookingForm() {
           timeSlot: `${selectedSlot.day} at ${selectedSlot.time}`,
         }),
       })
-        .then((res) => res.json())
-        .then((data) => setClientSecret(data.clientSecret))
-        .catch((err) => console.error('Error:', err))
+
+      const { url } = await response.json()
+
+      // Redirect to Checkout.com hosted payment page
+      window.location.href = url
+    } catch (err) {
+      console.error('Error creating payment session:', err)
+      setLoading(false)
     }
-  }, [selectedSlot, paymentMethod])
+  }
 
   const handlePayWithPayPal = () => {
     if (!selectedSlot) return
@@ -186,16 +128,27 @@ export default function BookingForm() {
           <h3 className="text-lg font-medium mb-4">Select Payment Method</h3>
           <div className="space-y-4">
             <button
-              onClick={() => setPaymentMethod('stripe')}
+              onClick={() => {
+                setPaymentMethod('checkout')
+                handlePayWithCheckout()
+              }}
+              disabled={loading}
               className={`w-full p-4 rounded-lg border transition-colors ${
-                paymentMethod === 'stripe'
+                loading
+                  ? 'opacity-50 cursor-not-allowed'
+                  : paymentMethod === 'checkout'
                   ? 'border-blue-500 bg-white shadow-md'
                   : 'border-gray-200 hover:border-gray-300 bg-white'
               }`}
             >
               <span className="flex items-center justify-center">
-                <span className="mr-2">Pay with Card</span>
-                <span className="text-sm text-gray-500">(Visa/Mastercard)</span>
+                <span className="mr-2">Pay with Card or Bank Transfer</span>
+                {loading && (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                )}
+              </span>
+              <span className="text-sm text-gray-500 block mt-1">
+                (Visa, Mastercard, Bank Transfer)
               </span>
             </button>
 
@@ -220,15 +173,12 @@ export default function BookingForm() {
               </span>
             </button>
           </div>
-        </div>
-      )}
 
-      {/* Stripe Payment Form */}
-      {selectedSlot && paymentMethod === 'stripe' && clientSecret && (
-        <div className="mt-6">
-          <Elements stripe={stripePromise} options={{ clientSecret }}>
-            <CheckoutForm />
-          </Elements>
+          <div className="mt-4 text-sm text-gray-500">
+            <p>✓ Secure payment processing</p>
+            <p>✓ Instant confirmation</p>
+            <p>✓ Bank transfer available for Bahrain banks</p>
+          </div>
         </div>
       )}
     </div>
