@@ -178,14 +178,16 @@ export default function BookingForm() {
         // Store booking ID in session storage
         sessionStorage.setItem('pendingBookingId', booking.id)
         
-        // Format the description for PayPal
-        const description = `Two Guitar Lessons - Starting ${selectedSlot.day} at ${selectedSlot.time}`
-        
-        // Construct PayPal URL - using encodeURIComponent for proper URL encoding
-        const paypalUrl = `${PAYPAL_ME_LINK}/50USD?note=${encodeURIComponent(description)}`
+        // Simple PayPal URL without query parameters
+        const paypalUrl = `${PAYPAL_ME_LINK}/25`
 
-        // Directly navigate to PayPal
-        window.location.href = paypalUrl
+        // Use window.open to navigate to PayPal in a new tab
+        window.open(paypalUrl, '_blank')
+        
+        // After a brief delay, redirect to success page
+        setTimeout(() => {
+          window.location.href = '/booking/success'
+        }, 1500)
       }
     } catch (error) {
       console.error('Payment error:', error)
@@ -320,8 +322,8 @@ export default function BookingForm() {
               <div className="mt-4 p-4 bg-white/10 rounded-xl">
                 <p className="text-xl font-bold">Package Details:</p>
                 <p className="mt-2">Two Guitar Lessons</p>
-                <p className="font-bold mt-2">$25 USD per lesson</p>
-                <p className="text-2xl font-bold mt-2">Total: $50 USD</p>
+                <p className="font-bold mt-2">Total: $25 USD</p>
+                <p className="text-sm mt-1 opacity-80">(Includes both lessons)</p>
               </div>
             </div>
             
