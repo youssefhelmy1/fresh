@@ -183,8 +183,8 @@ export default function BookingForm() {
         // Store booking ID in session storage
         sessionStorage.setItem('pendingBookingId', booking.id)
         
-        // Navigate to success page
-        window.location.href = '/booking/success'
+        // Redirect to PayPal
+        window.location.href = `${PAYPAL_ME_LINK}/${selectedPaymentOption.amount}`
       }
     } catch (error) {
       console.error('Payment error:', error)
@@ -192,11 +192,6 @@ export default function BookingForm() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const copyPayPalLink = () => {
-    navigator.clipboard.writeText(`${PAYPAL_ME_LINK}/${selectedPaymentOption.amount}`)
-    setError('PayPal link copied to clipboard!')
   }
 
   const handleSlotSelect = (slot: TimeSlot) => {
@@ -384,38 +379,20 @@ export default function BookingForm() {
                 
                 <div className="mt-4 pt-4 border-t border-white/20">
                   <p className="text-lg font-bold mb-2">Payment Instructions:</p>
-                  <p className="text-sm mb-2">1. Click the PayPal button below to open payment page</p>
-                  <p className="text-sm mb-4">2. After payment, click "Complete Booking"</p>
+                  <p className="text-sm mb-4">Click the PayPal button below to proceed with payment</p>
                   
                   <div className="flex flex-col gap-3">
-                    <a
-                      href={`${PAYPAL_ME_LINK}/${selectedPaymentOption.amount}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full bg-[#0079C1] text-white py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-102 font-bold text-lg flex items-center justify-center space-x-2"
+                    <button
+                      onClick={handlePayWithPayPal}
+                      disabled={loading}
+                      className="w-full bg-[#0079C1] hover:bg-[#006DAC] text-white py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-102 font-bold text-lg flex items-center justify-center space-x-2"
                     >
                       <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M20.067 8.478c.492.315.844.825.983 1.39l.001.006c.008.037.013.074.017.112l.001.006v.001c.275 2.107-.915 4.495-3.532 4.495h-2.333c-.278 0-.513.201-.558.471l-.001.007-.001.007-.738 4.714c-.064.37-.384.638-.759.638h-2.899c-.218 0-.402-.157-.437-.371v-.001c-.01-.053-.009-.107.003-.16l.001-.007.001-.007.736-4.705c.045-.27.28-.471.558-.471h2.333c2.618 0 3.808-2.389 3.533-4.496-.004-.038-.009-.075-.017-.111l-.001-.007c-.14-.564-.491-1.074-.984-1.389-.492-.315-1.068-.41-1.627-.41h-5.559c-.278 0-.513.201-.558.471l-.001.007-.001.007-2.099 13.408c-.064.37-.384.638-.759.638h-2.899c-.218 0-.402-.157-.437-.371v-.001c-.01-.053-.009-.107.003-.16l.001-.007.001-.007 2.097-13.399c.045-.27.28-.471.558-.471h8.459c.559 0 1.135.095 1.627.41z"/>
                       </svg>
-                      <span>Pay ${selectedPaymentOption.amount} with PayPal</span>
-                    </a>
-
-                    <button
-                      onClick={copyPayPalLink}
-                      className="w-full bg-white/20 hover:bg-white/30 text-white py-2 px-4 rounded-lg transition-all flex items-center justify-center space-x-2"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                      </svg>
-                      <span>Copy PayPal Link</span>
-                    </button>
-
-                    <button
-                      onClick={handlePayWithPayPal}
-                      disabled={loading}
-                      className="w-full bg-green-500 hover:bg-green-600 text-white py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-102 font-bold text-lg"
-                    >
-                      {loading ? 'Processing...' : 'Complete Booking'}
+                      <span>
+                        {loading ? 'Processing...' : `Pay $${selectedPaymentOption.amount} with PayPal`}
+                      </span>
                     </button>
                   </div>
                 </div>
