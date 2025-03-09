@@ -340,7 +340,7 @@ export default function BookingForm() {
 
                 {/* Bundle Option */}
                 <button
-                  onClick={() => setSelectedPaymentOption({ type: 'bundle', amount: 100 })}
+                  onClick={() => setSelectedPaymentOption({ type: 'bundle', amount: 199.90 })}
                   className={`p-4 rounded-xl transition-all relative overflow-hidden ${
                     selectedPaymentOption.type === 'bundle'
                       ? 'bg-white/20 border-2 border-white'
@@ -348,13 +348,13 @@ export default function BookingForm() {
                   }`}
                 >
                   <div className="absolute top-2 right-2 transform rotate-12 bg-yellow-400 text-blue-900 text-xs font-bold px-2 py-1 rounded">
-                    SAVE $200!
+                    SAVE $100!
                   </div>
                   <h4 className="text-xl font-bold">Bundle Package</h4>
-                  <p className="text-2xl font-bold mt-2">$100</p>
+                  <p className="text-2xl font-bold mt-2">$199.90</p>
                   <p className="text-sm mt-1 opacity-80">12 one-hour lessons</p>
                   <p className="text-sm mt-2 bg-white/20 rounded-lg p-2">
-                    Only $8.33 per class!
+                    Only $16.66 per class!
                   </p>
                 </button>
               </div>
@@ -369,11 +369,14 @@ export default function BookingForm() {
                 ) : (
                   <>
                     <p className="mt-2">12 Guitar Lessons Bundle</p>
-                    <p className="font-bold mt-2">Total: $100 USD</p>
-                    <p className="text-sm mt-1 opacity-80">(Save $200 compared to single classes!)</p>
+                    <p className="font-bold mt-2">Total: $199.90 USD</p>
+                    <p className="text-sm mt-1 opacity-80">(Save $100 compared to single classes!)</p>
                     <div className="mt-3 bg-yellow-400/20 p-3 rounded-lg">
                       <p className="text-sm font-bold text-yellow-200">
-                        🌟 Best Value! Schedule your classes flexibly within 6 months
+                        🌟 Best Value! Take up to 4 classes per week
+                      </p>
+                      <p className="text-sm mt-2 text-yellow-200">
+                        ✨ Schedule your classes flexibly within 3 months
                       </p>
                     </div>
                   </>
@@ -429,15 +432,15 @@ export default function BookingForm() {
                 <>
                   <p className="flex items-center justify-center">
                     <span className="mr-2">💎</span>
-                    12 Lessons Bundle - Best Value!
+                    12 Lessons Bundle - Save $100!
                   </p>
                   <p className="flex items-center justify-center">
                     <span className="mr-2">🎯</span>
-                    Only $8.33 per lesson
+                    Up to 4 classes per week
                   </p>
                   <p className="flex items-center justify-center">
                     <span className="mr-2">⭐</span>
-                    Flexible Scheduling
+                    Only $16.66 per lesson
                   </p>
                 </>
               ) : (
