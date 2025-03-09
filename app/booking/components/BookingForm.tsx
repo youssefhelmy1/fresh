@@ -178,18 +178,21 @@ export default function BookingForm() {
         // Store booking ID in session storage
         sessionStorage.setItem('pendingBookingId', booking.id)
         
-        // Format the PayPal.me link with amount and description
-        const paypalLink = `${PAYPAL_ME_LINK}/25USD?description=${encodeURIComponent(
+        // Create the PayPal.me URL - note the space after /25USD
+        const paypalUrl = `${PAYPAL_ME_LINK}/25USD ` + 
           `Guitar Lesson - ${selectedSlot.day} at ${selectedSlot.time}`
-        )}`
 
         // Open PayPal.me in a new window
-        window.open(paypalLink, '_blank')
-
-        // Wait a brief moment before redirecting to success page
-        setTimeout(() => {
-          window.location.href = '/booking/success'
-        }, 1000)
+        const newWindow = window.open(paypalUrl, '_blank')
+        
+        if (newWindow) {
+          // Redirect to success page after a moment
+          setTimeout(() => {
+            window.location.href = '/booking/success'
+          }, 1500)
+        } else {
+          throw new Error('Please allow popups to complete the payment')
+        }
       }
     } catch (error) {
       console.error('Payment error:', error)
