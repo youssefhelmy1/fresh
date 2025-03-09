@@ -3,13 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Metadata } from 'next'
-import SuccessContent from './SuccessContent'
-
-export const metadata: Metadata = {
-  title: 'Booking Successful - Guitar Lessons',
-  description: 'Your guitar lesson booking has been confirmed.',
-}
 
 export default function SuccessPage() {
   const router = useRouter()
