@@ -21,9 +21,9 @@ export default function BookingPage() {
           <div className="mt-8 border-t pt-6">
             <h3 className="text-lg font-semibold mb-4">Important Information</h3>
             <ul className="list-disc list-inside text-gray-600 space-y-2">
-              <li>Lessons are available Monday through Saturday</li>
+              <li>Lessons are available Sunday through Saturday</li>
               <li>Each lesson is one hour long</li>
-              <li>You can book up to 2 lessons per week</li>
+              <li>You can book up to 4 lessons per week</li>
               <li>24-hour cancellation policy applies</li>
               <li>Payment is required to confirm your booking</li>
             </ul>
