@@ -29,6 +29,7 @@ interface CustomerDetails {
 interface PaymentOption {
   type: 'single' | 'bundle'
   amount: number
+  quantity?: number
 }
 
 // Generate time slots for each day
@@ -71,7 +72,11 @@ export default function BookingForm() {
   const [error, setError] = useState<string | null>(null)
   const [customerDetails, setCustomerDetails] = useState<CustomerDetails | null>(null)
   const [showCustomerForm, setShowCustomerForm] = useState(false)
-  const [selectedPaymentOption, setSelectedPaymentOption] = useState<PaymentOption>({ type: 'single', amount: 25 })
+  const [selectedPaymentOption, setSelectedPaymentOption] = useState<PaymentOption>({ 
+    type: 'single', 
+    amount: 25,
+    quantity: 1 
+  })
 
   const fetchBookedSlots = useCallback(async () => {
     try {
@@ -201,6 +206,16 @@ export default function BookingForm() {
     setShowPayoneerInstructions(false)
   }
 
+  const handleQuantityChange = (quantity: number) => {
+    if (selectedPaymentOption.type === 'single') {
+      setSelectedPaymentOption({
+        type: 'single',
+        amount: 25 * quantity,
+        quantity
+      })
+    }
+  }
+
   const filteredTimeSlots = slots.filter(slot => slot.day === selectedDay)
 
   return (
@@ -320,18 +335,45 @@ export default function BookingForm() {
               {/* Package Selection */}
               <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Single Class Option */}
-                <button
-                  onClick={() => setSelectedPaymentOption({ type: 'single', amount: 25 })}
+                <div
                   className={`p-4 rounded-xl transition-all ${
                     selectedPaymentOption.type === 'single'
                       ? 'bg-white/20 border-2 border-white'
                       : 'bg-white/10 hover:bg-white/15'
                   }`}
                 >
-                  <h4 className="text-xl font-bold">Single Class</h4>
-                  <p className="text-2xl font-bold mt-2">$25</p>
-                  <p className="text-sm mt-1 opacity-80">1-hour lesson</p>
-                </button>
+                  <button
+                    onClick={() => setSelectedPaymentOption({ type: 'single', amount: 25 * (selectedPaymentOption.quantity || 1), quantity: selectedPaymentOption.quantity || 1 })}
+                    className="w-full text-left"
+                  >
+                    <h4 className="text-xl font-bold">Single Class</h4>
+                    <p className="text-2xl font-bold mt-2">${selectedPaymentOption.type === 'single' ? selectedPaymentOption.amount : 25}</p>
+                    <p className="text-sm mt-1 opacity-80">1-hour lesson</p>
+                  </button>
+                  
+                  {selectedPaymentOption.type === 'single' && (
+                    <div className="mt-3 pt-3 border-t border-white/20">
+                      <label className="text-sm font-medium">Number of Classes:</label>
+                      <div className="flex items-center mt-2 space-x-2">
+                        <button
+                          onClick={() => handleQuantityChange(Math.max(1, (selectedPaymentOption.quantity || 1) - 1))}
+                          className="bg-white/20 hover:bg-white/30 w-8 h-8 rounded-lg flex items-center justify-center"
+                        >
+                          -
+                        </button>
+                        <span className="text-lg font-bold w-8 text-center">
+                          {selectedPaymentOption.quantity || 1}
+                        </span>
+                        <button
+                          onClick={() => handleQuantityChange((selectedPaymentOption.quantity || 1) + 1)}
+                          className="bg-white/20 hover:bg-white/30 w-8 h-8 rounded-lg flex items-center justify-center"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 {/* Bundle Option */}
                 <button
@@ -358,8 +400,11 @@ export default function BookingForm() {
                 <p className="text-xl font-bold">Selected Package:</p>
                 {selectedPaymentOption.type === 'single' ? (
                   <>
-                    <p className="mt-2">Single Guitar Lesson</p>
-                    <p className="font-bold mt-2">Total: $25 USD</p>
+                    <p className="mt-2">Single Guitar Lesson {selectedPaymentOption.quantity > 1 ? `(${selectedPaymentOption.quantity} classes)` : ''}</p>
+                    <p className="font-bold mt-2">Total: ${selectedPaymentOption.amount} USD</p>
+                    {selectedPaymentOption.quantity > 1 && (
+                      <p className="text-sm mt-1 opacity-80">(${25} per class)</p>
+                    )}
                   </>
                 ) : (
                   <>
