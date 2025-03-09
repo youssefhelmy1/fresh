@@ -1,23 +1,16 @@
-'use client'
-
-import { Suspense } from 'react'
-import Link from 'next/link'
+import { Metadata } from 'next'
 import SuccessContent from './SuccessContent'
+
+export const metadata: Metadata = {
+  title: 'Booking Successful - Guitar Lessons',
+  description: 'Your guitar lesson booking has been confirmed.',
+}
 
 export default function SuccessPage() {
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-3xl mx-auto px-4">
-        <Suspense
-          fallback={
-            <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Verifying your booking...</p>
-            </div>
-          }
-        >
-          <SuccessContent />
-        </Suspense>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-12">
+      <div className="max-w-4xl mx-auto px-4">
+        <SuccessContent />
       </div>
     </div>
   )

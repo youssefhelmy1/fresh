@@ -167,18 +167,51 @@ export default function BookingForm() {
   const handlePayWithPayPal = async () => {
     if (!selectedSlot) return
 
-    setLoading(true)
-    const booking = await handleBookSlot()
-    
-    if (booking) {
-      sessionStorage.setItem('pendingBookingId', booking.id)
-      window.open(
-        `${PAYPAL_ME_LINK}/25USD?description=Guitar+Lesson+-+${selectedSlot.day}+at+${encodeURIComponent(selectedSlot.time)}`,
-        '_blank'
-      )
-      window.location.href = '/booking/success'
+    try {
+      setLoading(true)
+      setError(null)
+
+      // Create pending booking first
+      const booking = await handleBookSlot()
+      
+      if (booking) {
+        // Store booking ID in session storage
+        sessionStorage.setItem('pendingBookingId', booking.id)
+        
+        // Format the description for PayPal
+        const description = encodeURIComponent(`Guitar Lesson - ${selectedSlot.day} at ${selectedSlot.time}`)
+        
+        // Open PayPal in a new window
+        const paypalWindow = window.open(
+          `${PAYPAL_ME_LINK}/25USD?description=${description}`,
+          '_blank',
+          'noopener,noreferrer'
+        )
+
+        if (paypalWindow) {
+          // Set up a check for when PayPal window is closed
+          const checkPayPalWindow = setInterval(() => {
+            if (paypalWindow.closed) {
+              clearInterval(checkPayPalWindow)
+              // Redirect to success page
+              window.location.href = '/booking/success'
+            }
+          }, 1000)
+
+          // Clear interval after 10 minutes to prevent memory leaks
+          setTimeout(() => {
+            clearInterval(checkPayPalWindow)
+          }, 600000)
+        } else {
+          throw new Error('Could not open PayPal window. Please check your popup blocker settings.')
+        }
+      }
+    } catch (error) {
+      console.error('Payment error:', error)
+      setError(error instanceof Error ? error.message : 'Failed to process payment. Please try again.')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const handleSlotSelect = (slot: TimeSlot) => {

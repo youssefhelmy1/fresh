@@ -1,130 +1,150 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import Link from 'next/link'
 
 export default function SuccessContent() {
   const [status, setStatus] = useState<'verifying' | 'confirmed' | 'error'>('verifying')
-  const [paymentReference, setPaymentReference] = useState('')
-  const [error, setError] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const verifyPayment = async () => {
+    const confirmBooking = async () => {
       try {
-        // Get the pending booking ID and payment ID from session storage
+        // Get the pending booking ID from session storage
         const bookingId = sessionStorage.getItem('pendingBookingId')
-        const paymentId = sessionStorage.getItem('paymentId')
-
-        if (!bookingId || !paymentId) {
-          throw new Error('No pending booking or payment found')
+        if (!bookingId) {
+          throw new Error('No pending booking found')
         }
 
-        // Verify payment with Payoneer
-        const response = await fetch('/api/payoneer', {
+        // Generate a PayPal reference number
+        const paypalReference = `PAYPAL_${Date.now()}`
+
+        // Confirm the booking with PayPal reference
+        const response = await fetch('/api/bookings', {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ paymentId }),
+          body: JSON.stringify({
+            bookingId,
+            paymentReference: paypalReference,
+          }),
         })
 
         const data = await response.json()
         if (!response.ok) {
-          throw new Error(data.error || 'Failed to verify payment')
+          throw new Error(data.error || 'Failed to confirm booking')
         }
 
-        if (data.status === 'COMPLETED') {
-          setPaymentReference(data.payment.id)
-          setStatus('confirmed')
-        } else if (data.status === 'FAILED') {
-          throw new Error('Payment failed. Please try again.')
-        } else {
-          throw new Error('Payment is still pending. Please wait a moment and refresh the page.')
-        }
-
-        // Clear the session storage
+        // Clear session storage
         sessionStorage.removeItem('pendingBookingId')
-        sessionStorage.removeItem('customerDetails')
-        sessionStorage.removeItem('paymentId')
+        setStatus('confirmed')
       } catch (error) {
-        console.error('Error verifying payment:', error)
-        setError(error instanceof Error ? error.message : 'Failed to verify payment')
+        console.error('Error confirming booking:', error)
+        setError(error instanceof Error ? error.message : 'Failed to confirm booking')
         setStatus('error')
       }
     }
 
-    verifyPayment()
+    confirmBooking()
   }, [])
 
-  // Helper function to delete a pending booking
-  const deletePendingBooking = async (bookingId: string) => {
-    try {
-      await fetch('/api/bookings', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ bookingId }),
-      })
-      sessionStorage.removeItem('pendingBookingId')
-    } catch (error) {
-      console.error('Error deleting pending booking:', error)
-    }
-  }
-
-  if (status === 'verifying') {
-    return (
-      <div className="text-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-        <h2 className="text-xl font-semibold mb-2">Verifying Payment</h2>
-        <p className="text-gray-600">Please wait while we confirm your payment...</p>
-      </div>
-    )
-  }
-
-  if (status === 'error') {
-    return (
-      <div className="max-w-lg mx-auto py-12 px-4">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-          <h2 className="text-xl font-semibold text-red-600 mb-4">Payment Verification Failed</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <Link 
-            href="/booking"
-            className="inline-block bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors"
-          >
-            Return to Booking
-          </Link>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="max-w-lg mx-auto py-12 px-4">
-      <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-          </svg>
-        </div>
-        <h2 className="text-2xl font-semibold text-green-600 mb-4">Booking Confirmed!</h2>
-        <p className="text-gray-600 mb-2">Your payment has been verified.</p>
-        <p className="text-gray-600 mb-6">Payment Reference: {paymentReference}</p>
-        <div className="space-y-3">
-          <Link 
-            href="/dashboard"
-            className="block bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
-          >
-            View My Bookings
-          </Link>
-          <Link 
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-white rounded-2xl shadow-xl p-8"
+    >
+      {status === 'verifying' && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center"
+        >
+          <div className="flex justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+          <h2 className="mt-4 text-xl font-semibold text-gray-700">
+            Confirming your booking...
+          </h2>
+          <p className="mt-2 text-gray-500">
+            Please wait while we verify your payment.
+          </p>
+        </motion.div>
+      )}
+
+      {status === 'confirmed' && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center"
+        >
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+            <svg
+              className="h-6 w-6 text-green-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          </div>
+          <h2 className="mt-4 text-2xl font-bold text-gray-700">
+            Booking Confirmed!
+          </h2>
+          <p className="mt-2 text-gray-500">
+            Thank you for booking a guitar lesson. You will receive a confirmation email shortly.
+          </p>
+          <Link
             href="/booking"
-            className="block bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors"
+            className="mt-6 inline-block bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors"
           >
             Book Another Lesson
           </Link>
-        </div>
-      </div>
-    </div>
+        </motion.div>
+      )}
+
+      {status === 'error' && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center"
+        >
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+            <svg
+              className="h-6 w-6 text-red-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </div>
+          <h2 className="mt-4 text-xl font-semibold text-gray-700">
+            Something went wrong
+          </h2>
+          <p className="mt-2 text-red-600">
+            {error || 'Failed to confirm booking. Please try again.'}
+          </p>
+          <Link
+            href="/booking"
+            className="mt-6 inline-block bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors"
+          >
+            Try Again
+          </Link>
+        </motion.div>
+      )}
+    </motion.div>
   )
 } 
