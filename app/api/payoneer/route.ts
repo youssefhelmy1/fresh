@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server'
+import { Headers } from 'next/dist/compiled/@edge-runtime/primitives'
 
-const PAYONEER_API_URL = 'https://api.payoneer.com'
+const PAYONEER_API_URL = 'https://api.payoneer.com/v2/billing-services'
+const PAYONEER_API_KEY = process.env.PAYONEER_API_KEY
+const PAYONEER_ACCOUNT_ID = process.env.PAYONEER_ACCOUNT_ID
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { amount, description, customerDetails } = body
+    const { amount, description, customerDetails, metadata } = body
 
     if (!amount || !description || !customerDetails) {
       return NextResponse.json(
@@ -14,14 +17,52 @@ export async function POST(request: Request) {
       )
     }
 
-    // Instead of creating a payment link, we'll return the Payoneer recipient registration link
-    const registrationLink = `https://payouts.sandbox.payoneer.com/partners/lp.aspx?pid=${process.env.PAYONEER_PROGRAM_ID}&langid=92&email=${encodeURIComponent(customerDetails.email)}&firstname=${encodeURIComponent(customerDetails.firstName)}&lastname=${encodeURIComponent(customerDetails.lastName)}&amount=${amount}&desc=${encodeURIComponent(description)}`
+    // Create payment using Payoneer's Billing Service API
+    const headers = new Headers({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${PAYONEER_API_KEY}`,
+      'Account-Id': PAYONEER_ACCOUNT_ID || ''
+    })
 
-    // For development/testing, we'll simulate a successful payment link creation
+    const response = await fetch(`${PAYONEER_API_URL}/payments`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        amount: {
+          value: amount,
+          currency: 'USD'
+        },
+        description,
+        customer: {
+          email: customerDetails.email,
+          name: `${customerDetails.firstName} ${customerDetails.lastName}`
+        },
+        payment_method: {
+          type: 'card'
+        },
+        redirect_urls: {
+          success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/booking/success`,
+          failure_url: `${process.env.NEXT_PUBLIC_BASE_URL}/booking/error`,
+          cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/booking`
+        },
+        metadata: {
+          bookingId: metadata.bookingId,
+          lessonDay: metadata.day,
+          lessonTime: metadata.time
+        }
+      })
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to create payment')
+    }
+
     return NextResponse.json({
-      payment_url: registrationLink,
-      id: `TEST_${Date.now()}`,
-      status: 'CREATED'
+      payment_url: data.redirect_url,
+      id: data.id,
+      status: data.status
     })
   } catch (error) {
     console.error('Error creating Payoneer payment:', error)
@@ -32,14 +73,30 @@ export async function POST(request: Request) {
   }
 }
 
-// Webhook handler for payment notifications
 export async function PUT(request: Request) {
   try {
     const body = await request.json()
-    
-    // For development/testing, we'll auto-confirm the payment
-    const bookingId = body.metadata?.bookingId
-    if (bookingId) {
+    const { paymentId } = body
+
+    // Verify payment status with Payoneer
+    const headers = new Headers({
+      'Authorization': `Bearer ${PAYONEER_API_KEY}`,
+      'Account-Id': PAYONEER_ACCOUNT_ID || ''
+    })
+
+    const response = await fetch(`${PAYONEER_API_URL}/payments/${paymentId}`, {
+      headers
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to verify payment')
+    }
+
+    // If payment is successful, update booking status
+    if (data.status === 'COMPLETED') {
+      const bookingId = data.metadata.bookingId
       await fetch('/api/bookings', {
         method: 'PUT',
         headers: {
@@ -47,16 +104,20 @@ export async function PUT(request: Request) {
         },
         body: JSON.stringify({
           bookingId,
-          paymentReference: `TEST_${Date.now()}`
+          paymentReference: data.id
         })
       })
     }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ 
+      success: true,
+      status: data.status,
+      payment: data
+    })
   } catch (error) {
-    console.error('Error processing webhook:', error)
+    console.error('Error verifying payment:', error)
     return NextResponse.json(
-      { error: 'Webhook processing failed' },
+      { error: error instanceof Error ? error.message : 'Error verifying payment' },
       { status: 500 }
     )
   }

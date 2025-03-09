@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { motion } from 'framer-motion'
 
 interface TimeSlot {
   id: string
@@ -15,7 +16,7 @@ interface Booking {
   time: string
   bookedAt: string
   paymentStatus: 'pending' | 'confirmed'
-  paymentMethod: 'paypal' | 'payoneer'
+  paymentMethod: 'paypal'
   paymentReference?: string
 }
 
@@ -51,10 +52,15 @@ const timeSlots = generateTimeSlots()
 const PAYPAL_ME_LINK = 'https://paypal.me/yousefhelmymusic'
 const PAYONEER_EMAIL = 'helmyyoussef612@gmail.com'
 
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
 export default function BookingForm() {
   const [slots, setSlots] = useState<TimeSlot[]>(timeSlots)
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null)
-  const [paymentMethod, setPaymentMethod] = useState<'payoneer' | 'paypal' | null>(null)
   const [loading, setLoading] = useState(false)
   const [selectedDay, setSelectedDay] = useState<string>('Monday')
   const [showPayoneerInstructions, setShowPayoneerInstructions] = useState(false)
@@ -88,7 +94,6 @@ export default function BookingForm() {
         s.id === selectedSlot.id && s.available
       )) {
         setSelectedSlot(null)
-        setPaymentMethod(null)
         setShowPayoneerInstructions(false)
         setError('Sorry, this slot has just been booked by someone else. Please select another time.')
       }
@@ -110,7 +115,7 @@ export default function BookingForm() {
   }, [fetchBookedSlots])
 
   const handleBookSlot = async () => {
-    if (!selectedSlot || !paymentMethod) return
+    if (!selectedSlot) return
 
     try {
       setLoading(true)
@@ -126,7 +131,6 @@ export default function BookingForm() {
       console.log('Creating pending booking:', {
         day: selectedSlot.day,
         time: selectedSlot.time,
-        paymentMethod,
       })
 
       const response = await fetch('/api/bookings', {
@@ -137,7 +141,6 @@ export default function BookingForm() {
         body: JSON.stringify({
           day: selectedSlot.day,
           time: selectedSlot.time,
-          paymentMethod,
         }),
       })
 
@@ -161,306 +164,189 @@ export default function BookingForm() {
     }
   }
 
-  const confirmPayment = async (bookingId: string, paymentReference: string) => {
-    try {
-      const response = await fetch('/api/bookings', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          bookingId,
-          paymentReference,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to confirm payment')
-      }
-
-      return true
-    } catch (error) {
-      console.error('Payment confirmation error:', error)
-      return false
-    }
-  }
-
-  const handlePayWithPayoneer = async () => {
-    if (!selectedSlot) return
-    
-    setPaymentMethod('payoneer')
-    const booking = await handleBookSlot()
-    
-    if (booking) {
-      setShowPayoneerInstructions(true)
-      // Store booking ID in session storage for the success page
-      sessionStorage.setItem('pendingBookingId', booking.id)
-    }
-  }
-
   const handlePayWithPayPal = async () => {
     if (!selectedSlot) return
 
-    setPaymentMethod('paypal')
+    setLoading(true)
     const booking = await handleBookSlot()
     
     if (booking) {
-      // Store booking ID in session storage for the success page
       sessionStorage.setItem('pendingBookingId', booking.id)
-      
-      // Open PayPal.me link in a new window
       window.open(
         `${PAYPAL_ME_LINK}/25USD?description=Guitar+Lesson+-+${selectedSlot.day}+at+${encodeURIComponent(selectedSlot.time)}`,
         '_blank'
       )
-      // Redirect to success page
       window.location.href = '/booking/success'
     }
-  }
-
-  const handlePayWithCard = async () => {
-    if (!selectedSlot) return
-    
-    setPaymentMethod('payoneer')
-    setShowCustomerForm(true)
-  }
-
-  const handleCardPayment = async (customerDetails: CustomerDetails) => {
-    try {
-      setLoading(true)
-      setError(null)
-
-      if (!selectedSlot) {
-        throw new Error('No slot selected')
-      }
-
-      // Create pending booking first
-      const booking = await handleBookSlot()
-      if (!booking) return
-
-      // For development/testing, we'll simulate the payment process
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API call delay
-
-      // Store booking ID and customer details in session storage
-      sessionStorage.setItem('pendingBookingId', booking.id)
-      sessionStorage.setItem('customerDetails', JSON.stringify(customerDetails))
-
-      // Redirect to success page
-      window.location.href = '/booking/success'
-    } catch (error) {
-      console.error('Payment error:', error)
-      setError(error instanceof Error ? error.message : 'Failed to process payment')
-      setLoading(false)
-    }
+    setLoading(false)
   }
 
   const handleSlotSelect = (slot: TimeSlot) => {
     if (!slot.available) return
     setSelectedSlot(slot)
     setError(null)
-    setPaymentMethod(null)
     setShowPayoneerInstructions(false)
   }
 
   const filteredTimeSlots = slots.filter(slot => slot.day === selectedDay)
 
   return (
-    <div className="space-y-8">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="max-w-4xl mx-auto p-6 space-y-8"
+    >
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg shadow-lg"
+        >
           {error}
-        </div>
+        </motion.div>
       )}
 
       {/* Day Selection */}
-      <div>
-        <h3 className="text-lg font-medium mb-4">Select Day</h3>
-        <div className="grid grid-cols-7 gap-2">
+      <div className="bg-white rounded-2xl shadow-xl p-6 transform perspective-1000">
+        <h3 className="text-2xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          Select Day
+        </h3>
+        <motion.div 
+          className="grid grid-cols-7 gap-3"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ staggerChildren: 0.1 }}
+        >
           {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((day) => (
-            <button
+            <motion.button
               key={day}
+              whileHover={{ scale: 1.05, rotateX: 5 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => {
                 setSelectedDay(day)
                 setSelectedSlot(null)
-                setPaymentMethod(null)
-                setShowPayoneerInstructions(false)
                 setError(null)
               }}
-              className={`p-2 text-sm rounded-lg border transition-colors ${
+              className={`p-3 text-sm rounded-xl border transition-all transform hover:shadow-lg ${
                 selectedDay === day
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-purple-50 text-blue-700 shadow-md'
                   : 'border-gray-200 hover:border-gray-300 text-gray-700'
               }`}
             >
               {day.slice(0, 3)}
-            </button>
+            </motion.button>
           ))}
-        </div>
+        </motion.div>
       </div>
 
       {/* Time Slots */}
-      <div>
-        <h3 className="text-lg font-medium mb-4">Select Time - {selectedDay}</h3>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+      <motion.div 
+        className="bg-white rounded-2xl shadow-xl p-6 transform perspective-1000"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <h3 className="text-2xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          Select Time - {selectedDay}
+        </h3>
+        <motion.div 
+          className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ staggerChildren: 0.05 }}
+        >
           {filteredTimeSlots.map((slot) => (
-            <button
+            <motion.button
               key={slot.id}
+              whileHover={{ scale: 1.05, rotateX: 5 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => handleSlotSelect(slot)}
               disabled={!slot.available || loading}
-              className={`p-3 rounded-lg border text-sm transition-all transform hover:scale-105 ${
+              className={`p-4 rounded-xl border text-sm transition-all transform ${
                 !slot.available
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  ? 'bg-gray-50 text-gray-400 cursor-not-allowed'
                 : selectedSlot?.id === slot.id
-                  ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
-                  : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                  ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-purple-50 text-blue-700 shadow-lg'
+                  : 'border-gray-200 hover:border-gray-300 text-gray-700 hover:shadow-md'
               }`}
             >
               {slot.time}
-              {!slot.available && <span className="block text-xs mt-1">(Booked)</span>}
-            </button>
+              {!slot.available && (
+                <motion.span 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="block text-xs mt-1 text-red-400"
+                >
+                  (Booked)
+                </motion.span>
+              )}
+            </motion.button>
           ))}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
-      {/* Payment Methods */}
+      {/* Payment Section */}
       {selectedSlot && selectedSlot.available && (
-        <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
-          <h3 className="text-lg font-medium mb-4">Select Payment Method</h3>
-          <div className="space-y-4">
-            <button
-              onClick={handlePayWithCard}
+        <motion.div 
+          className="bg-gradient-to-br from-blue-600 to-purple-600 p-8 rounded-2xl shadow-2xl text-white"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <motion.div 
+            className="text-center space-y-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            <h3 className="text-2xl font-bold">Complete Your Booking</h3>
+            <div className="text-lg opacity-90">
+              <p>Selected Time: {selectedSlot.time}</p>
+              <p>Selected Day: {selectedSlot.day}</p>
+              <p className="font-bold mt-2">Price: $25 USD</p>
+            </div>
+            
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handlePayWithPayPal}
               disabled={loading}
-              className={`w-full p-4 rounded-lg border transition-colors ${
-                loading ? 'opacity-50 cursor-not-allowed' :
-                paymentMethod === 'payoneer' && !showCustomerForm
-                  ? 'border-blue-500 bg-white shadow-md'
-                  : 'border-gray-200 hover:border-gray-300 bg-white'
-              }`}
+              className="w-full max-w-md mx-auto bg-white text-blue-600 py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
             >
-              <span className="flex items-center justify-center">
-                <img 
-                  src="/payoneer-logo.png" 
-                  alt="Payoneer" 
-                  className="h-6 mr-2"
-                />
-                <span>{loading ? 'Processing...' : 'Pay with Card'}</span>
-              </span>
-              <span className="text-sm text-gray-500 block mt-1">
-                (Visa, Mastercard, etc.)
-              </span>
-            </button>
-
-            <button
-              onClick={() => {
-                setPaymentMethod('paypal')
-                handlePayWithPayPal()
-              }}
-              disabled={loading}
-              className={`w-full p-4 rounded-lg border flex items-center justify-center transition-colors ${
-                loading ? 'opacity-50 cursor-not-allowed' :
-                paymentMethod === 'paypal'
-                  ? 'border-blue-500 bg-white shadow-md'
-                  : 'border-gray-200 hover:border-gray-300 bg-white'
-              }`}
-            >
-              <span className="flex items-center justify-center">
+              <span className="flex items-center justify-center space-x-3">
                 <img 
                   src="/paypal-logo.jpg" 
                   alt="PayPal" 
-                  className="h-6 mr-2"
+                  className="h-6"
                 />
-                <span>{loading ? 'Processing...' : 'Pay with PayPal'}</span>
+                <span className="font-bold">
+                  {loading ? 'Processing...' : 'Pay with PayPal'}
+                </span>
               </span>
-            </button>
-          </div>
+            </motion.button>
 
-          {showCustomerForm && (
-            <div className="mt-6 p-4 bg-white rounded-lg border border-blue-200">
-              <h4 className="font-medium text-lg mb-4">Enter Payment Details</h4>
-              <form onSubmit={(e) => {
-                e.preventDefault()
-                const formData = new FormData(e.currentTarget)
-                handleCardPayment({
-                  firstName: formData.get('firstName') as string,
-                  lastName: formData.get('lastName') as string,
-                  email: formData.get('email') as string
-                })
-              }} className="space-y-4">
-                <div>
-                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">First Name</label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    id="firstName"
-                    required
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">Last Name</label>
-                  <input
-                    type="text"
-                    name="lastName"
-                    id="lastName"
-                    required
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-                  <input
-                    type="email"
-                    name="email"
-                    id="email"
-                    required
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                >
-                  {loading ? 'Processing...' : 'Proceed to Payment'}
-                </button>
-              </form>
-            </div>
-          )}
-
-          {showPayoneerInstructions && (
-            <div className="mt-6 p-4 bg-white rounded-lg border border-blue-200">
-              <h4 className="font-medium text-lg mb-3">Payoneer Payment Instructions</h4>
-              <div className="space-y-3 text-gray-600">
-                <p>Please follow these steps to complete your payment:</p>
-                <ol className="list-decimal list-inside space-y-2">
-                  <li>Log in to your Payoneer account</li>
-                  <li>Select "Make a Payment"</li>
-                  <li>Enter the following email: <span className="font-medium text-gray-800">{PAYONEER_EMAIL}</span></li>
-                  <li>Enter the amount: <span className="font-medium text-gray-800">$25.00 USD</span></li>
-                  <li>In the description, enter: <span className="font-medium text-gray-800">Guitar Lesson - {selectedSlot.day} at {selectedSlot.time}</span></li>
-                </ol>
-                <div className="mt-4 text-sm bg-yellow-50 p-3 rounded border border-yellow-200">
-                  <p>⚠️ Important: After making the payment, please take a screenshot or note down the payment reference number.</p>
-                </div>
-                <button
-                  onClick={() => window.location.href = '/booking/success'}
-                  className="mt-4 w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700"
-                >
-                  I've Completed the Payment
-                </button>
-              </div>
-            </div>
-          )}
-
-          <div className="mt-4 text-sm text-gray-500">
-            <p>✓ Secure payment processing</p>
-            <p>✓ Instant confirmation</p>
-            <p>✓ Multiple payment options available</p>
-          </div>
-        </div>
+            <motion.div 
+              className="mt-6 text-sm opacity-90 space-y-2"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              <p className="flex items-center justify-center">
+                <span className="mr-2">✨</span>
+                Secure payment processing
+              </p>
+              <p className="flex items-center justify-center">
+                <span className="mr-2">⚡</span>
+                Instant confirmation
+              </p>
+              <p className="flex items-center justify-center">
+                <span className="mr-2">🔒</span>
+                100% secure checkout
+              </p>
+            </motion.div>
+          </motion.div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   )
 } 

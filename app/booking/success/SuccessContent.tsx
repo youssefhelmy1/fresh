@@ -9,50 +9,51 @@ export default function SuccessContent() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    const confirmBooking = async () => {
+    const verifyPayment = async () => {
       try {
-        // Get the pending booking ID and customer details from session storage
+        // Get the pending booking ID and payment ID from session storage
         const bookingId = sessionStorage.getItem('pendingBookingId')
-        const customerDetailsStr = sessionStorage.getItem('customerDetails')
+        const paymentId = sessionStorage.getItem('paymentId')
 
-        if (!bookingId) {
-          throw new Error('No pending booking found')
+        if (!bookingId || !paymentId) {
+          throw new Error('No pending booking or payment found')
         }
 
-        // For development/testing, we'll auto-generate a payment reference
-        const reference = `PAY_${Date.now()}`
-        setPaymentReference(reference)
-
-        // Confirm the payment
-        const response = await fetch('/api/bookings', {
+        // Verify payment with Payoneer
+        const response = await fetch('/api/payoneer', {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            bookingId,
-            paymentReference: reference,
-          }),
+          body: JSON.stringify({ paymentId }),
         })
 
         const data = await response.json()
         if (!response.ok) {
-          throw new Error(data.error || 'Failed to confirm payment')
+          throw new Error(data.error || 'Failed to verify payment')
+        }
+
+        if (data.status === 'COMPLETED') {
+          setPaymentReference(data.payment.id)
+          setStatus('confirmed')
+        } else if (data.status === 'FAILED') {
+          throw new Error('Payment failed. Please try again.')
+        } else {
+          throw new Error('Payment is still pending. Please wait a moment and refresh the page.')
         }
 
         // Clear the session storage
         sessionStorage.removeItem('pendingBookingId')
         sessionStorage.removeItem('customerDetails')
-        
-        setStatus('confirmed')
+        sessionStorage.removeItem('paymentId')
       } catch (error) {
-        console.error('Error confirming payment:', error)
-        setError(error instanceof Error ? error.message : 'Failed to confirm payment')
+        console.error('Error verifying payment:', error)
+        setError(error instanceof Error ? error.message : 'Failed to verify payment')
         setStatus('error')
       }
     }
 
-    confirmBooking()
+    verifyPayment()
   }, [])
 
   // Helper function to delete a pending booking
