@@ -26,6 +26,11 @@ interface CustomerDetails {
   email: string
 }
 
+interface PaymentOption {
+  type: 'single' | 'bundle'
+  amount: number
+}
+
 // Generate time slots for each day
 const generateTimeSlots = () => {
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
@@ -66,6 +71,7 @@ export default function BookingForm() {
   const [error, setError] = useState<string | null>(null)
   const [customerDetails, setCustomerDetails] = useState<CustomerDetails | null>(null)
   const [showCustomerForm, setShowCustomerForm] = useState(false)
+  const [selectedPaymentOption, setSelectedPaymentOption] = useState<PaymentOption>({ type: 'single', amount: 25 })
 
   const fetchBookedSlots = useCallback(async () => {
     try {
@@ -189,7 +195,7 @@ export default function BookingForm() {
   }
 
   const copyPayPalLink = () => {
-    navigator.clipboard.writeText(`${PAYPAL_ME_LINK}/25`)
+    navigator.clipboard.writeText(`${PAYPAL_ME_LINK}/${selectedPaymentOption.amount}`)
     setError('PayPal link copied to clipboard!')
   }
 
@@ -315,11 +321,63 @@ export default function BookingForm() {
             <div className="text-lg opacity-90">
               <p>Selected Time: {selectedSlot.time}</p>
               <p>Selected Day: {selectedSlot.day}</p>
-              <div className="mt-4 p-4 bg-white/10 rounded-xl">
-                <p className="text-xl font-bold">Package Details:</p>
-                <p className="mt-2">Two Guitar Lessons</p>
-                <p className="font-bold mt-2">Total: $25 USD</p>
-                <p className="text-sm mt-1 opacity-80">(Includes both lessons)</p>
+              
+              {/* Package Selection */}
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Single Class Option */}
+                <button
+                  onClick={() => setSelectedPaymentOption({ type: 'single', amount: 25 })}
+                  className={`p-4 rounded-xl transition-all ${
+                    selectedPaymentOption.type === 'single'
+                      ? 'bg-white/20 border-2 border-white'
+                      : 'bg-white/10 hover:bg-white/15'
+                  }`}
+                >
+                  <h4 className="text-xl font-bold">Single Class</h4>
+                  <p className="text-2xl font-bold mt-2">$25</p>
+                  <p className="text-sm mt-1 opacity-80">1-hour lesson</p>
+                </button>
+
+                {/* Bundle Option */}
+                <button
+                  onClick={() => setSelectedPaymentOption({ type: 'bundle', amount: 100 })}
+                  className={`p-4 rounded-xl transition-all relative overflow-hidden ${
+                    selectedPaymentOption.type === 'bundle'
+                      ? 'bg-white/20 border-2 border-white'
+                      : 'bg-white/10 hover:bg-white/15'
+                  }`}
+                >
+                  <div className="absolute top-2 right-2 transform rotate-12 bg-yellow-400 text-blue-900 text-xs font-bold px-2 py-1 rounded">
+                    SAVE $200!
+                  </div>
+                  <h4 className="text-xl font-bold">Bundle Package</h4>
+                  <p className="text-2xl font-bold mt-2">$100</p>
+                  <p className="text-sm mt-1 opacity-80">12 one-hour lessons</p>
+                  <p className="text-sm mt-2 bg-white/20 rounded-lg p-2">
+                    Only $8.33 per class!
+                  </p>
+                </button>
+              </div>
+
+              <div className="mt-6 p-4 bg-white/10 rounded-xl">
+                <p className="text-xl font-bold">Selected Package:</p>
+                {selectedPaymentOption.type === 'single' ? (
+                  <>
+                    <p className="mt-2">Single Guitar Lesson</p>
+                    <p className="font-bold mt-2">Total: $25 USD</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="mt-2">12 Guitar Lessons Bundle</p>
+                    <p className="font-bold mt-2">Total: $100 USD</p>
+                    <p className="text-sm mt-1 opacity-80">(Save $200 compared to single classes!)</p>
+                    <div className="mt-3 bg-yellow-400/20 p-3 rounded-lg">
+                      <p className="text-sm font-bold text-yellow-200">
+                        🌟 Best Value! Schedule your classes flexibly within 6 months
+                      </p>
+                    </div>
+                  </>
+                )}
                 
                 <div className="mt-4 pt-4 border-t border-white/20">
                   <p className="text-lg font-bold mb-2">Payment Instructions:</p>
@@ -328,7 +386,7 @@ export default function BookingForm() {
                   
                   <div className="flex flex-col gap-3">
                     <a
-                      href={`${PAYPAL_ME_LINK}/25`}
+                      href={`${PAYPAL_ME_LINK}/${selectedPaymentOption.amount}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-full bg-[#0079C1] text-white py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-102 font-bold text-lg flex items-center justify-center space-x-2"
@@ -336,7 +394,7 @@ export default function BookingForm() {
                       <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M20.067 8.478c.492.315.844.825.983 1.39l.001.006c.008.037.013.074.017.112l.001.006v.001c.275 2.107-.915 4.495-3.532 4.495h-2.333c-.278 0-.513.201-.558.471l-.001.007-.001.007-.738 4.714c-.064.37-.384.638-.759.638h-2.899c-.218 0-.402-.157-.437-.371v-.001c-.01-.053-.009-.107.003-.16l.001-.007.001-.007.736-4.705c.045-.27.28-.471.558-.471h2.333c2.618 0 3.808-2.389 3.533-4.496-.004-.038-.009-.075-.017-.111l-.001-.007c-.14-.564-.491-1.074-.984-1.389-.492-.315-1.068-.41-1.627-.41h-5.559c-.278 0-.513.201-.558.471l-.001.007-.001.007-2.099 13.408c-.064.37-.384.638-.759.638h-2.899c-.218 0-.402-.157-.437-.371v-.001c-.01-.053-.009-.107.003-.16l.001-.007.001-.007 2.097-13.399c.045-.27.28-.471.558-.471h8.459c.559 0 1.135.095 1.627.41z"/>
                       </svg>
-                      <span>Open PayPal Payment ($25)</span>
+                      <span>Pay ${selectedPaymentOption.amount} with PayPal</span>
                     </a>
 
                     <button
@@ -367,14 +425,33 @@ export default function BookingForm() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
             >
-              <p className="flex items-center justify-center">
-                <span className="mr-2">✨</span>
-                Book Two Lessons Package
-              </p>
-              <p className="flex items-center justify-center">
-                <span className="mr-2">⚡</span>
-                Instant Confirmation
-              </p>
+              {selectedPaymentOption.type === 'bundle' ? (
+                <>
+                  <p className="flex items-center justify-center">
+                    <span className="mr-2">💎</span>
+                    12 Lessons Bundle - Best Value!
+                  </p>
+                  <p className="flex items-center justify-center">
+                    <span className="mr-2">🎯</span>
+                    Only $8.33 per lesson
+                  </p>
+                  <p className="flex items-center justify-center">
+                    <span className="mr-2">⭐</span>
+                    Flexible Scheduling
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="flex items-center justify-center">
+                    <span className="mr-2">✨</span>
+                    Single Guitar Lesson
+                  </p>
+                  <p className="flex items-center justify-center">
+                    <span className="mr-2">⚡</span>
+                    Instant Confirmation
+                  </p>
+                </>
+              )}
               <p className="flex items-center justify-center">
                 <span className="mr-2">🔒</span>
                 Secure PayPal Checkout
