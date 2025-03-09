@@ -179,10 +179,10 @@ export default function BookingForm() {
         sessionStorage.setItem('pendingBookingId', booking.id)
         
         // Format the description for PayPal
-        const description = `Guitar Lesson - ${selectedSlot.day} at ${selectedSlot.time}`
+        const description = `Two Guitar Lessons - Starting ${selectedSlot.day} at ${selectedSlot.time}`
         
         // Construct PayPal URL - using encodeURIComponent for proper URL encoding
-        const paypalUrl = `${PAYPAL_ME_LINK}/25USD?note=${encodeURIComponent(description)}`
+        const paypalUrl = `${PAYPAL_ME_LINK}/50USD?note=${encodeURIComponent(description)}`
 
         // Directly navigate to PayPal
         window.location.href = paypalUrl
@@ -317,24 +317,27 @@ export default function BookingForm() {
             <div className="text-lg opacity-90">
               <p>Selected Time: {selectedSlot.time}</p>
               <p>Selected Day: {selectedSlot.day}</p>
-              <p className="font-bold mt-2">Price: $25 USD</p>
+              <div className="mt-4 p-4 bg-white/10 rounded-xl">
+                <p className="text-xl font-bold">Package Details:</p>
+                <p className="mt-2">Two Guitar Lessons</p>
+                <p className="font-bold mt-2">$25 USD per lesson</p>
+                <p className="text-2xl font-bold mt-2">Total: $50 USD</p>
+              </div>
             </div>
             
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.02, backgroundColor: '#0070BA' }}
+              whileTap={{ scale: 0.98 }}
               onClick={handlePayWithPayPal}
               disabled={loading}
-              className="w-full max-w-md mx-auto bg-white text-blue-600 py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
+              className="w-full max-w-md mx-auto bg-[#0079C1] text-white py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all transform font-bold text-lg"
             >
               <span className="flex items-center justify-center space-x-3">
-                <img 
-                  src="/paypal-logo.jpg" 
-                  alt="PayPal" 
-                  className="h-6"
-                />
-                <span className="font-bold">
-                  {loading ? 'Processing...' : 'Pay with PayPal'}
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M20.067 8.478c.492.315.844.825.983 1.39l.001.006c.008.037.013.074.017.112l.001.006v.001c.275 2.107-.915 4.495-3.532 4.495h-2.333c-.278 0-.513.201-.558.471l-.001.007-.001.007-.738 4.714c-.064.37-.384.638-.759.638h-2.899c-.218 0-.402-.157-.437-.371v-.001c-.01-.053-.009-.107.003-.16l.001-.007.001-.007.736-4.705c.045-.27.28-.471.558-.471h2.333c2.618 0 3.808-2.389 3.533-4.496-.004-.038-.009-.075-.017-.111l-.001-.007c-.14-.564-.491-1.074-.984-1.389-.492-.315-1.068-.41-1.627-.41h-5.559c-.278 0-.513.201-.558.471l-.001.007-.001.007-2.099 13.408c-.064.37-.384.638-.759.638h-2.899c-.218 0-.402-.157-.437-.371v-.001c-.01-.053-.009-.107.003-.16l.001-.007.001-.007 2.097-13.399c.045-.27.28-.471.558-.471h8.459c.559 0 1.135.095 1.627.41z"/>
+                </svg>
+                <span>
+                  {loading ? 'Processing...' : 'Pay Securely with PayPal'}
                 </span>
               </span>
             </motion.button>
@@ -347,15 +350,15 @@ export default function BookingForm() {
             >
               <p className="flex items-center justify-center">
                 <span className="mr-2">✨</span>
-                Secure payment processing
+                Book Two Lessons Package
               </p>
               <p className="flex items-center justify-center">
                 <span className="mr-2">⚡</span>
-                Instant confirmation
+                Instant Confirmation
               </p>
               <p className="flex items-center justify-center">
                 <span className="mr-2">🔒</span>
-                100% secure checkout
+                Secure PayPal Checkout
               </p>
             </motion.div>
           </motion.div>
