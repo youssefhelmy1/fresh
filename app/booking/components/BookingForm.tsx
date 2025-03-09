@@ -184,13 +184,19 @@ export default function BookingForm() {
         // Construct PayPal URL
         const paypalUrl = `${PAYPAL_ME_LINK}/25USD/${description}`
 
-        // First, try to open in a new window
-        window.location.href = paypalUrl
-
-        // After a brief delay, redirect to success page
-        setTimeout(() => {
+        // Open PayPal in a new tab
+        const paypalWindow = window.open(paypalUrl, '_blank')
+        
+        if (paypalWindow) {
+          // If window opened successfully, redirect to success page
           window.location.href = '/booking/success'
-        }, 2000)
+        } else {
+          // If popup was blocked, show error and provide direct link
+          setError('Popup blocked. Please click OK to proceed to PayPal.')
+          setTimeout(() => {
+            window.location.href = paypalUrl
+          }, 1000)
+        }
       }
     } catch (error) {
       console.error('Payment error:', error)
