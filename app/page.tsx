@@ -163,9 +163,14 @@ export default function Home() {
                 <div className="absolute inset-0 bg-gradient-to-r from-white to-gray-50 rounded-2xl transform transition-transform duration-500 group-hover:scale-105" />
                 <div className="relative p-8 rounded-2xl bg-white shadow-xl border border-gray-100 transform transition-all duration-500 group-hover:translate-y-[-5px]">
                   <div className={`absolute inset-0 bg-gradient-to-r ${feature.gradient} opacity-0 group-hover:opacity-10 rounded-2xl transition-opacity duration-500`} />
-                  <div className="relative">
-                    <div className="text-4xl mb-4 transform transition-transform duration-500 group-hover:scale-110">
-                      {feature.icon}
+                  <div className="relative flex flex-col items-center text-center">
+                    <div className="relative -mt-16 mb-6">
+                      <div className="absolute inset-0 bg-gradient-to-r from-white to-gray-50 rounded-full transform transition-transform duration-500 group-hover:scale-105" />
+                      <div className="relative w-20 h-20 rounded-full bg-white shadow-lg flex items-center justify-center transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-12">
+                        <span className="text-4xl transform transition-transform duration-500 group-hover:scale-110">
+                          {feature.icon}
+                        </span>
+                      </div>
                     </div>
                     <h3 className="text-xl font-semibold mb-2 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                       {feature.title}
