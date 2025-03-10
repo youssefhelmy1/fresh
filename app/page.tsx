@@ -21,6 +21,45 @@ export default function Home() {
     setIsVideoLoaded(true)
   }
 
+  const features = [
+    {
+      icon: '💻',
+      title: 'Online Convenience',
+      description: 'Learn from anywhere in the world with high-quality video lessons',
+      gradient: 'from-blue-500 to-purple-500'
+    },
+    {
+      icon: '💰',
+      title: 'Affordable Pricing',
+      description: '$25 per hour, with special pricing for multiple lessons',
+      gradient: 'from-green-500 to-emerald-500'
+    },
+    {
+      icon: '🎸',
+      title: 'Expert Instruction',
+      description: 'Personalized lessons tailored to your skill level and goals',
+      gradient: 'from-orange-500 to-red-500'
+    },
+    {
+      icon: '📝',
+      title: 'Free Access to Tabs',
+      description: 'Get exclusive access to all my guitar covers with detailed tabs',
+      gradient: 'from-pink-500 to-rose-500'
+    },
+    {
+      icon: '📚',
+      title: 'Step-by-Step Guidance',
+      description: 'Clear, structured lessons for beginners to advanced players',
+      gradient: 'from-indigo-500 to-purple-500'
+    },
+    {
+      icon: '📈',
+      title: 'Progress Tracking',
+      description: 'Monitor improvement with personalized feedback and milestones',
+      gradient: 'from-cyan-500 to-blue-500'
+    }
+  ]
+
   return (
     <main>
       {/* Hero Section */}
@@ -95,40 +134,49 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-12">Why Choose My Lessons?</h2>
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-4xl font-bold text-center mb-12 bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent"
+          >
+            Why Choose My Lessons?
+          </motion.h2>
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center p-6">
-              <div className="text-primary-600 text-4xl mb-4">💻</div>
-              <h3 className="text-xl font-semibold mb-2">Online Convenience</h3>
-              <p className="text-gray-600">Learn from anywhere in the world with high-quality video lessons</p>
-            </div>
-            <div className="text-center p-6">
-              <div className="text-primary-600 text-4xl mb-4">💰</div>
-              <h3 className="text-xl font-semibold mb-2">Affordable Pricing</h3>
-              <p className="text-gray-600">$25 per hour, with special pricing for multiple lessons</p>
-            </div>
-            <div className="text-center p-6">
-              <div className="text-primary-600 text-4xl mb-4">🎸</div>
-              <h3 className="text-xl font-semibold mb-2">Expert Instruction</h3>
-              <p className="text-gray-600">Personalized lessons tailored to your skill level and goals</p>
-            </div>
-            <div className="text-center p-6">
-              <div className="text-primary-600 text-4xl mb-4">📝</div>
-              <h3 className="text-xl font-semibold mb-2">Free Access to Tabs</h3>
-              <p className="text-gray-600">Get exclusive access to all my guitar covers with detailed tabs</p>
-            </div>
-            <div className="text-center p-6">
-              <div className="text-primary-600 text-4xl mb-4">📚</div>
-              <h3 className="text-xl font-semibold mb-2">Step-by-Step Guidance</h3>
-              <p className="text-gray-600">Clear, structured lessons for beginners to advanced players</p>
-            </div>
-            <div className="text-center p-6">
-              <div className="text-primary-600 text-4xl mb-4">📈</div>
-              <h3 className="text-xl font-semibold mb-2">Progress Tracking</h3>
-              <p className="text-gray-600">Monitor improvement with personalized feedback and milestones</p>
-            </div>
+            {features.map((feature, index) => (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ 
+                  scale: 1.05,
+                  rotateX: 5,
+                  rotateY: 5,
+                  boxShadow: "0 20px 40px rgba(0,0,0,0.1)"
+                }}
+                className="group relative"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-white to-gray-50 rounded-2xl transform transition-transform duration-500 group-hover:scale-105" />
+                <div className="relative p-8 rounded-2xl bg-white shadow-xl border border-gray-100 transform transition-all duration-500 group-hover:translate-y-[-5px]">
+                  <div className={`absolute inset-0 bg-gradient-to-r ${feature.gradient} opacity-0 group-hover:opacity-10 rounded-2xl transition-opacity duration-500`} />
+                  <div className="relative">
+                    <div className="text-4xl mb-4 transform transition-transform duration-500 group-hover:scale-110">
+                      {feature.icon}
+                    </div>
+                    <h3 className="text-xl font-semibold mb-2 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                      {feature.title}
+                    </h3>
+                    <p className="text-gray-600">
+                      {feature.description}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
