@@ -438,20 +438,26 @@ export default function BookingForm() {
                   <p className="text-lg font-bold mb-2">Payment Instructions:</p>
                   <p className="text-sm mb-4">Click the PayPal button below to proceed with payment</p>
                   
-                  <div className="flex flex-col gap-3">
-                    <a
-                      href={`${PAYPAL_ME_LINK}/${selectedPaymentOption.amount}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full bg-[#0079C1] hover:bg-[#006DAC] text-white py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-102 font-bold text-lg flex items-center justify-center space-x-2"
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="flex-1 h-px bg-gray-300"></div>
+                      <span className="px-4 text-sm text-gray-500">or</span>
+                      <div className="flex-1 h-px bg-gray-300"></div>
+                    </div>
+                    
+                    <button
+                      type="button"
+                      onClick={handlePayWithPayPal}
+                      className="w-full flex items-center justify-center space-x-2 bg-[#0070BA] hover:bg-[#005ea6] text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg"
                     >
                       <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M20.067 8.478c.492.315.844.825.983 1.39l.001.006c.008.037.013.074.017.112l.001.006v.001c.275 2.107-.915 4.495-3.532 4.495h-2.333c-.278 0-.513.201-.558.471l-.001.007-.001.007-.738 4.714c-.064.37-.384.638-.759.638h-2.899c-.218 0-.402-.157-.437-.371v-.001c-.01-.053-.009-.107.003-.16l.001-.007.001-.007.736-4.705c.045-.27.28-.471.558-.471h2.333c2.618 0 3.808-2.389 3.533-4.496-.004-.038-.009-.075-.017-.111l-.001-.007c-.14-.564-.491-1.074-.984-1.389-.492-.315-1.068-.41-1.627-.41h-5.559c-.278 0-.513.201-.558.471l-.001.007-.001.007-2.099 13.408c-.064.37-.384.638-.759.638h-2.899c-.218 0-.402-.157-.437-.371v-.001c-.01-.053-.009-.107.003-.16l.001-.007.001-.007 2.097-13.399c.045-.27.28-.471.558-.471h8.459c.559 0 1.135.095 1.627.41z"/>
+                        <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 2.72a.641.641 0 0 1 .633-.54h5.833c3.720 0 5.341 2.198 5.341 5.828 0 3.63-1.621 5.828-5.341 5.828h-2.364l-1.994 8.451zm2.055-9.923h1.677c1.863 0 2.67-1.185 2.67-2.914 0-1.73-.807-2.914-2.67-2.914h-1.677l-.8 5.828z"/>
                       </svg>
-                      <span>
-                        Pay ${selectedPaymentOption.amount} with PayPal
-                      </span>
-                    </a>
+                      <span className="text-lg">Pay with PayPal</span>
+                    </button>
+                    <p className="text-center text-sm text-gray-500 mt-2">
+                      You'll be redirected to PayPal to complete your payment
+                    </p>
                   </div>
                 </div>
               </div>
