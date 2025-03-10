@@ -114,6 +114,21 @@ export default function Home() {
               <h3 className="text-xl font-semibold mb-2">Expert Instruction</h3>
               <p className="text-gray-600">Personalized lessons tailored to your skill level and goals</p>
             </div>
+            <div className="text-center p-6">
+              <div className="text-primary-600 text-4xl mb-4">📝</div>
+              <h3 className="text-xl font-semibold mb-2">Free Access to Tabs</h3>
+              <p className="text-gray-600">Get exclusive access to all my guitar covers with detailed tabs</p>
+            </div>
+            <div className="text-center p-6">
+              <div className="text-primary-600 text-4xl mb-4">📚</div>
+              <h3 className="text-xl font-semibold mb-2">Step-by-Step Guidance</h3>
+              <p className="text-gray-600">Clear, structured lessons for beginners to advanced players</p>
+            </div>
+            <div className="text-center p-6">
+              <div className="text-primary-600 text-4xl mb-4">📈</div>
+              <h3 className="text-xl font-semibold mb-2">Progress Tracking</h3>
+              <p className="text-gray-600">Monitor improvement with personalized feedback and milestones</p>
+            </div>
           </div>
         </div>
       </section>
