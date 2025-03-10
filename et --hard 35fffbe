@@ -1,0 +1,54 @@
+[33mdf1582f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m fix: Optimize build configuration and remove postinstall script
+[33m19ddcd7[m fix: Update Netlify configuration for proper deployment
+[33m4e70ecd[m y7elmy footer
+[33m35fffbe[m feat: Enhance booking section with 3D effects and animations
+[33m1a97fdb[m feat: Enhance features section with centered emojis and improved 3D effects
+[33me21788b[m revert: Return to rectangular card design for features section
+[33m68af92c[m feat: Update features section with circular cards and floating icons
+[33m54d7a9d[m feat: Add 3D design and animations to features section
+[33mad335f1[m feat: Add new features to Why Choose My Lessons section
+[33m41f5983[m feat: Add video transition to home page hero section
+[33mca7bb98[m refactor: Move social media links to footer and remove from main page and booking form
+[33m1bbfa50[m feat: Add social media links section with Instagram, YouTube, and TikTok
+[33m4412f6d[m fix: Add type safety checks for quantity property
+[33m2ee474a[m fix: Remove metadata from client component and create separate metadata file
+[33mf84c427[m feat: Add multiple class booking and payment status messages
+[33m79df588[m fix: Update PayPal button to direct link for better reliability
+[33m893745c[m feat: Simplify payment flow with direct PayPal integration
+[33m2b12e5a[m adjusting bookiing page
+[33md820cf5[m feat: Update bundle pricing to .90 and add 4 classes per week option
+[33m30e22f7[m feat: Add bundle package option with attractive discount
+[33mc61ca70[m feat: Improve payment flow with separate PayPal link and copy button
+[33m42c9c59[m fix: Update pricing to  total and simplify PayPal URL
+[33mbd294eb[m feat: Update PayPal button design and pricing for two lessons
+[33m4df1c87[m fix: Simplify PayPal URL handling for direct navigation
+[33m12677b9[m fix: Improve PayPal URL handling and window opening
+[33mdb819c8[m fix: Update PayPal button functionality
+[33m8830f44[m fix: Update PayPal.me link format
+[33m835c5d5[m fix: Simplify PayPal.me link integration
+[33mce16b7d[m fix: Improve PayPal integration and payment flow
+[33m71969fa[m chore: Add framer-motion dependency for animations
+[33m7340618[m feat: Simplify to PayPal-only payments and add modern 3D animations
+[33mf3847ee[m fix: Simplify payment flow for development and testing
+[33m2e58caa[m feat: Add Payoneer card payment integration
+[33m8b2e588[m fix: Only show slots as booked after payment confirmation
+[33m0cd2f00[m feat: Implement payment confirmation flow for bookings - Add payment status tracking, payment reference handling, and improve booking validation
+[33m97caf75[m fix: Use system temp directory for bookings and improve error handling
+[33m3c9dac4[m fix: Improve booking system error handling and file operations
+[33m9df32eb[m fix: Improve booking system reliability and error handling
+[33maf4119c[m feat: Add booking slot management and simplify success page
+[33m924d336[m fix: Update PayPal logo file extension from png to jpg
+[33m2f73376[m update: Change Payoneer email address
+[33m38ebdc0[m fix: Add Stripe dependency and fix build issues
+[33mc3f205b[m fix: Update dependencies and fix build issues with client components
+[33m536e662[m fix: Add Node.js version configuration for Netlify
+[33mecc5b70[m feat: Switch to Payoneer and PayPal payment options
+[33m0ca2c2f[m feat: Switch to Checkout.com for better payment support in Bahrain
+[33m7c19917[m feat: Update booking system with improved design and payment verification
+[33m4c0b46c[m fix: Add environment variable handling and build configuration
+[33m350ec95[m fix: Update Stripe integration and fix build errors
+[33m0fb05ca[m paybal
+[33mc782c3b[m feat: Add simplified booking with Stripe and PayPal integration
+[33m6af4299[m fix: Properly handle Calendar component with dynamic imports
+[33m82ffecd[m fix: Update date-fns imports to use named imports
+[33m1e664c5[m Initial commit: Guitar lessons website with Next.js and Tailwind CSS
