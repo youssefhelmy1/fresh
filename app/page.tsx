@@ -144,7 +144,7 @@ export default function Home() {
           >
             Why Choose My Lessons?
           </motion.h2>
-          <div className="grid md:grid-cols-3 gap-12">
+          <div className="grid md:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <motion.div
                 key={feature.title}
@@ -160,23 +160,19 @@ export default function Home() {
                 }}
                 className="group relative"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-white to-gray-50 rounded-full transform transition-transform duration-500 group-hover:scale-105" />
-                <div className="relative aspect-square rounded-full bg-white shadow-xl border border-gray-100 transform transition-all duration-500 group-hover:translate-y-[-5px] overflow-hidden">
-                  <div className={`absolute inset-0 bg-gradient-to-r ${feature.gradient} opacity-0 group-hover:opacity-10 rounded-full transition-opacity duration-500`} />
-                  <div className="relative h-full flex flex-col items-center justify-center p-8 text-center">
-                    <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
-                      <div className="w-16 h-16 rounded-full bg-white shadow-lg flex items-center justify-center transform transition-transform duration-500 group-hover:scale-110">
-                        <span className="text-3xl">{feature.icon}</span>
-                      </div>
+                <div className="absolute inset-0 bg-gradient-to-r from-white to-gray-50 rounded-2xl transform transition-transform duration-500 group-hover:scale-105" />
+                <div className="relative p-8 rounded-2xl bg-white shadow-xl border border-gray-100 transform transition-all duration-500 group-hover:translate-y-[-5px]">
+                  <div className={`absolute inset-0 bg-gradient-to-r ${feature.gradient} opacity-0 group-hover:opacity-10 rounded-2xl transition-opacity duration-500`} />
+                  <div className="relative">
+                    <div className="text-4xl mb-4 transform transition-transform duration-500 group-hover:scale-110">
+                      {feature.icon}
                     </div>
-                    <div className="mt-12">
-                      <h3 className="text-xl font-semibold mb-3 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                        {feature.title}
-                      </h3>
-                      <p className="text-gray-600 text-sm">
-                        {feature.description}
-                      </p>
-                    </div>
+                    <h3 className="text-xl font-semibold mb-2 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                      {feature.title}
+                    </h3>
+                    <p className="text-gray-600">
+                      {feature.description}
+                    </p>
                   </div>
                 </div>
               </motion.div>
