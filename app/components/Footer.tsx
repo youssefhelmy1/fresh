@@ -49,7 +49,7 @@ export default function Footer() {
             </a>
           </div>
           <p className="text-gray-500 text-sm">
-            © {new Date().getFullYear()} Guitar Lessons. All rights reserved.
+            © {new Date().getFullYear()} y7elmy Guitar Lessons. All rights reserved.
           </p>
         </div>
       </div>
