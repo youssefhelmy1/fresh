@@ -187,19 +187,52 @@ export default function Home() {
       </section>
 
       {/* Booking Section */}
-      <section id="booking" className="py-20 bg-gray-50">
+      <section id="booking" className="py-20 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-12">Book Your Lesson</h2>
-          <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-8">
-            <p className="text-center text-lg mb-8">
-              Choose your preferred time slot and start your musical journey today!
-            </p>
-            <div className="text-center">
-              <Link href="/booking" className="btn-primary text-lg">
-                View Available Slots
-              </Link>
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-4xl font-bold text-center mb-12 bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent"
+          >
+            Book Your Lesson
+          </motion.h2>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="max-w-3xl mx-auto"
+          >
+            <div className="group relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary-500/20 to-secondary-500/20 rounded-2xl transform transition-transform duration-500 group-hover:scale-105" />
+              <div className="relative p-8 rounded-2xl bg-white shadow-xl border border-gray-100 transform transition-all duration-500 group-hover:translate-y-[-5px]">
+                <div className="absolute inset-0 bg-gradient-to-r from-primary-500/10 to-secondary-500/10 opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-500" />
+                <div className="relative flex flex-col items-center text-center">
+                  <div className="relative -mt-16 mb-6">
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary-500/20 to-secondary-500/20 rounded-full transform transition-transform duration-500 group-hover:scale-105" />
+                    <div className="relative w-20 h-20 rounded-full bg-white shadow-lg flex items-center justify-center transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-12">
+                      <span className="text-4xl transform transition-transform duration-500 group-hover:scale-110">
+                        🎸
+                      </span>
+                    </div>
+                  </div>
+                  <h3 className="text-2xl font-semibold mb-4 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                    Start Your Musical Journey
+                  </h3>
+                  <p className="text-gray-600 mb-8">
+                    Choose your preferred time slot and begin learning with personalized guidance
+                  </p>
+                  <Link 
+                    href="/booking" 
+                    className="btn-primary text-lg transform transition-all duration-500 hover:scale-105 hover:shadow-lg"
+                  >
+                    View Available Slots
+                  </Link>
+                </div>
+              </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
     </main>
