@@ -6,7 +6,6 @@
   NODE_VERSION = "18.17.0"
   NPM_VERSION = "9.6.7"
   NEXT_TELEMETRY_DISABLED = "1"
-  NODE_OPTIONS = "--max_old_space_size=4096"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
@@ -17,39 +16,4 @@
 [[redirects]]
   from = "/*"
   to = "/index.html"
-  status = 200
-
-[build.processing]
-  skip_processing = false
-
-[build.processing.html]
-  pretty_urls = true
-
-[build.processing.css]
-  bundle = true
-  minify = true
-
-[build.processing.js]
-  bundle = true
-  minify = true
-
-[build.processing.images]
-  compress = true
-
-[build.processing.skip_processing]
-  - "*.jpg"
-  - "*.jpeg"
-  - "*.png"
-  - "*.gif"
-  - "*.ico"
-  - "*.svg"
-  - "*.webp"
-  - "*.woff"
-  - "*.woff2"
-  - "*.ttf"
-  - "*.eot"
-  - "*.otf"
-
-[build.processing.optimize_images]
-  enabled = true
-  quality = 80 
+  status = 200 
