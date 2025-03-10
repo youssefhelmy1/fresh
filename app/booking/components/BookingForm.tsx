@@ -448,11 +448,13 @@ export default function BookingForm() {
                     <button
                       type="button"
                       onClick={handlePayWithPayPal}
-                      className="w-full flex items-center justify-center space-x-2 bg-[#0070BA] hover:bg-[#005ea6] text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg"
+                      className="w-full flex items-center justify-center space-x-3 bg-[#0070BA] hover:bg-[#005ea6] text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg"
                     >
-                      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 2.72a.641.641 0 0 1 .633-.54h5.833c3.720 0 5.341 2.198 5.341 5.828 0 3.63-1.621 5.828-5.341 5.828h-2.364l-1.994 8.451zm2.055-9.923h1.677c1.863 0 2.67-1.185 2.67-2.914 0-1.73-.807-2.914-2.67-2.914h-1.677l-.8 5.828z"/>
-                      </svg>
+                      <img 
+                        src="/paypal-logo.jpg" 
+                        alt="PayPal" 
+                        className="h-8 w-auto object-contain"
+                      />
                       <span className="text-lg">Pay with PayPal</span>
                     </button>
                     <p className="text-center text-sm text-gray-500 mt-2">
