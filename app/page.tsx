@@ -1,32 +1,96 @@
-import React from 'react'
+'use client'
+
+import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export default function Home() {
+  const [showVideo, setShowVideo] = useState(false)
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowVideo(true)
+    }, 5000)
+
+    return () => clearTimeout(timer)
+  }, [])
+
+  const handleVideoLoad = () => {
+    setIsVideoLoaded(true)
+  }
+
   return (
     <main>
       {/* Hero Section */}
-      <section className="relative h-[90vh] flex items-center justify-center">
-        <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-black/50 z-10" />
-          <Image
-            src="https://images.unsplash.com/photo-1510915361894-db8b60106cb1"
-            alt="Guitar player performing"
-            fill
-            className="object-cover"
-            priority
-          />
-        </div>
+      <section className="relative h-[90vh] flex items-center justify-center overflow-hidden">
+        <AnimatePresence mode="wait">
+          {!showVideo ? (
+            <motion.div
+              key="banner"
+              initial={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-0"
+            >
+              <div className="absolute inset-0 bg-black/50 z-10" />
+              <Image
+                src="https://images.unsplash.com/photo-1510915361894-db8b60106cb1"
+                alt="Guitar player performing"
+                fill
+                className="object-cover"
+                priority
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="video"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: isVideoLoaded ? 1 : 0 }}
+              className="absolute inset-0 z-0"
+            >
+              <div className="absolute inset-0 bg-black/30 z-10" />
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                onLoadedData={handleVideoLoad}
+                className="absolute inset-0 w-full h-full object-cover"
+              >
+                <source src="/guitar-intro.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="relative z-20 text-center text-white px-4 max-w-4xl mx-auto">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6">
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="text-5xl md:text-6xl font-bold mb-6"
+          >
             Master the Guitar with Professional Guidance
-          </h1>
-          <p className="text-xl md:text-2xl mb-8">
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="text-xl md:text-2xl mb-8"
+          >
             10 years of experience teaching students of all levels
-          </p>
-          <Link href="#booking" className="btn-primary text-lg">
-            Book Your First Lesson
-          </Link>
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9 }}
+          >
+            <Link href="#booking" className="btn-primary text-lg">
+              Book Your First Lesson
+            </Link>
+          </motion.div>
         </div>
       </section>
 
@@ -62,7 +126,6 @@ export default function Home() {
             <p className="text-center text-lg mb-8">
               Choose your preferred time slot and start your musical journey today!
             </p>
-            {/* Booking calendar will be integrated here */}
             <div className="text-center">
               <Link href="/booking" className="btn-primary text-lg">
                 View Available Slots
