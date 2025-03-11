@@ -30,37 +30,52 @@ export default function AuthForm() {
     const name = !isLogin ? formData.get('name') as string : undefined
 
     try {
+      // First, check if the API endpoint is accessible
       const response = await fetch(`/api/auth/${isLogin ? 'login' : 'register'}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password, name }),
-      })
+      }).catch(error => {
+        console.error('Network error:', error);
+        throw new Error('Unable to connect to the server. Please check your internet connection.');
+      });
+
+      if (!response) {
+        throw new Error('No response received from server');
+      }
 
       let data;
-      try {
-        data = await response.json();
-      } catch (parseError) {
-        console.error('Failed to parse response:', parseError);
-        throw new Error('Server returned an invalid response. Please try again.');
+      const contentType = response.headers.get("content-type");
+      
+      if (contentType && contentType.includes("application/json")) {
+        try {
+          data = await response.json();
+        } catch (parseError) {
+          console.error('JSON parse error:', parseError);
+          throw new Error('Unable to process server response. Please try again.');
+        }
+      } else {
+        console.error('Invalid content type:', contentType);
+        throw new Error('Server returned an invalid response format. Please try again.');
       }
 
       if (!response.ok) {
         throw new Error(data.error || 'Authentication failed. Please check your credentials.');
       }
 
-      // Store the token in localStorage
-      if (data.token) {
-        localStorage.setItem('authToken', data.token);
-        // Redirect to booking page
-        router.push('/booking');
-      } else {
-        throw new Error('No authentication token received');
+      if (!data.token) {
+        throw new Error('No authentication token received from server');
       }
+
+      // Store the token and redirect
+      localStorage.setItem('authToken', data.token);
+      router.push('/booking');
+      
     } catch (err) {
       console.error('Auth error:', err);
-      setError(err instanceof Error ? err.message : 'Authentication failed. Please try again.');
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false)
     }
@@ -184,9 +199,16 @@ export default function AuthForm() {
           whileTap={{ scale: 0.98 }}
           className="w-full text-sm text-gray-600 hover:text-gray-900 transition-all duration-200 hover:bg-gray-50 py-2 rounded-lg"
         >
-          {isLogin ? 
-            "New to guitar lessons? Sign up now" : 
-            'Already registered? Login here'}
+          {isLogin ? (
+            "New to guitar lessons? Sign up now"
+          ) : (
+            <span>
+              Already registered?{' '}
+              <span className="text-blue-600 underline hover:text-blue-700">
+                Login here
+              </span>
+            </span>
+          )}
         </motion.button>
       </motion.div>
     </motion.div>
