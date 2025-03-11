@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
 const SOCIAL_MEDIA = {
-  instagram: 'https://www.instagram.com/',
+  instagram: 'https://www.instagram.com/@yousefhelmymusic',
   youtube: 'https://www.youtube.com/@yousefhelmymusic',
   tiktok: 'https://www.tiktok.com/@y7elmy'
 }
