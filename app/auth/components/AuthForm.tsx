@@ -29,7 +29,16 @@ export default function AuthForm() {
         body: JSON.stringify({ email, password, name }),
       })
 
-      const data = await response.json()
+      const contentType = response.headers.get("content-type");
+      let data;
+      
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        data = await response.json();
+      } else {
+        // Handle non-JSON response
+        const text = await response.text();
+        throw new Error('Invalid server response');
+      }
 
       if (!response.ok) {
         throw new Error(data.error || 'Authentication failed')
@@ -41,6 +50,7 @@ export default function AuthForm() {
       // Redirect to booking page
       router.push('/booking')
     } catch (err) {
+      console.error('Auth error:', err)
       setError(err instanceof Error ? err.message : 'Authentication failed')
     } finally {
       setLoading(false)

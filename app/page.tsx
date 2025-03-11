@@ -133,6 +133,101 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Add this section before the features section */}
+      <section className="py-16 relative overflow-hidden">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+        >
+          <div className="relative z-10">
+            <div className="text-center">
+              <motion.h2 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent sm:text-4xl"
+              >
+                Ready to Start Your Musical Journey?
+              </motion.h2>
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="mt-4 text-xl text-gray-600"
+              >
+                Join our community of music enthusiasts
+              </motion.p>
+            </div>
+
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="mt-10 flex flex-col sm:flex-row justify-center gap-4 sm:gap-6"
+            >
+              <motion.a
+                href="/auth"
+                whileHover={{ scale: 1.05, rotateX: 5 }}
+                whileTap={{ scale: 0.95 }}
+                className="group relative inline-flex items-center justify-center px-8 py-4 overflow-hidden rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-xl transition-all duration-300 hover:shadow-2xl"
+              >
+                <div className="absolute inset-0 w-full h-full transition duration-300 transform -translate-x-full bg-gradient-to-r from-blue-500 to-purple-500 group-hover:translate-x-0" />
+                <div className="relative flex items-center justify-center space-x-2">
+                  <svg 
+                    className="w-6 h-6" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth="2" 
+                      d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                    />
+                  </svg>
+                  <span className="font-semibold">Sign In</span>
+                </div>
+              </motion.a>
+
+              <motion.a
+                href="/auth"
+                whileHover={{ scale: 1.05, rotateX: 5 }}
+                whileTap={{ scale: 0.95 }}
+                className="group relative inline-flex items-center justify-center px-8 py-4 overflow-hidden rounded-lg bg-white text-blue-600 shadow-xl transition-all duration-300 hover:shadow-2xl border-2 border-blue-600"
+                onClick={() => {
+                  // Store a flag to show registration form
+                  localStorage.setItem('showRegister', 'true')
+                }}
+              >
+                <div className="absolute inset-0 w-full h-full transition duration-300 transform -translate-x-full bg-gradient-to-r from-blue-50 to-purple-50 group-hover:translate-x-0" />
+                <div className="relative flex items-center justify-center space-x-2">
+                  <svg 
+                    className="w-6 h-6" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth="2" 
+                      d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                    />
+                  </svg>
+                  <span className="font-semibold">Create Account</span>
+                </div>
+              </motion.a>
+            </motion.div>
+          </div>
+
+          {/* Background decoration */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-10">
+            <div className="w-96 h-96 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full filter blur-3xl" />
+          </div>
+        </motion.div>
+      </section>
+
       {/* Features Section */}
       <section className="py-20 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto px-4">
