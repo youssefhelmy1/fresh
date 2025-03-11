@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
+import { useRouter } from 'next/navigation'
 
 interface TimeSlot {
   id: string
@@ -56,6 +57,7 @@ const generateTimeSlots = () => {
 const timeSlots = generateTimeSlots()
 
 const PAYPAL_ME_LINK = 'https://paypal.me/yousefhelmymusic'
+const INSTAGRAM_LINK = 'https://www.instagram.com/yousefhelmymusic/'
 
 declare global {
   interface Window {
@@ -77,6 +79,15 @@ export default function BookingForm() {
     amount: 25,
     quantity: 1 
   })
+  const router = useRouter()
+
+  useEffect(() => {
+    // Check if user is authenticated
+    const token = localStorage.getItem('authToken')
+    if (!token) {
+      router.push('/auth')
+    }
+  }, [router])
 
   const fetchBookedSlots = useCallback(async () => {
     try {
@@ -180,6 +191,12 @@ export default function BookingForm() {
     try {
       setLoading(true)
       setError(null)
+
+      const token = localStorage.getItem('authToken')
+      if (!token) {
+        router.push('/auth')
+        return
+      }
 
       // Create pending booking first
       const booking = await handleBookSlot()
