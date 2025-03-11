@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 
@@ -9,6 +9,15 @@ export default function AuthForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+
+  useEffect(() => {
+    // Check if user came from Sign Up button
+    const showRegister = localStorage.getItem('showRegister')
+    if (showRegister === 'true') {
+      setIsLogin(false)
+      localStorage.removeItem('showRegister') // Clear the flag
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -59,13 +68,27 @@ export default function AuthForm() {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="bg-white p-8 rounded-2xl shadow-xl"
+      initial={{ opacity: 0, y: 20, rotateX: -10 }}
+      animate={{ opacity: 1, y: 0, rotateX: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="relative bg-white p-8 rounded-2xl shadow-xl transform-gpu perspective-1000"
+      style={{
+        transformStyle: 'preserve-3d',
+        backfaceVisibility: 'hidden'
+      }}
     >
-      <h2 className="text-2xl font-bold text-center mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+      {/* 3D decorative elements */}
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-purple-600/5 rounded-2xl transform -translate-z-2" />
+      <div className="absolute inset-0 bg-gradient-to-b from-white/50 to-transparent rounded-2xl transform -translate-z-1" />
+
+      <motion.h2 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="text-2xl font-bold text-center mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+      >
         {isLogin ? 'Welcome Back!' : 'Create Your Account'}
-      </h2>
+      </motion.h2>
 
       {error && (
         <motion.div
@@ -77,67 +100,95 @@ export default function AuthForm() {
         </motion.div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {!isLogin && (
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-              Full Name
+      <form onSubmit={handleSubmit} className="space-y-6 relative">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="space-y-6"
+        >
+          {!isLogin && (
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                Full Name
+              </label>
+              <input
+                type="text"
+                name="name"
+                id="name"
+                required={!isLogin}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 hover:border-blue-400"
+              />
+            </motion.div>
+          )}
+
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              Email
             </label>
             <input
-              type="text"
-              name="name"
-              id="name"
-              required={!isLogin}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              type="email"
+              name="email"
+              id="email"
+              required
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 hover:border-blue-400"
             />
-          </div>
-        )}
+          </motion.div>
 
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email
-          </label>
-          <input
-            type="email"
-            name="email"
-            id="email"
-            required
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              Password
+            </label>
+            <input
+              type="password"
+              name="password"
+              id="password"
+              required
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 hover:border-blue-400"
+            />
+          </motion.div>
+        </motion.div>
 
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-            Password
-          </label>
-          <input
-            type="password"
-            name="password"
-            id="password"
-            required
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
-
-        <button
+        <motion.button
           type="submit"
           disabled={loading}
-          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+          whileHover={{ scale: 1.02, translateY: -2 }}
+          whileTap={{ scale: 0.98 }}
+          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-all duration-200"
         >
           {loading ? 'Processing...' : isLogin ? 'Login' : 'Sign Up'}
-        </button>
+        </motion.button>
       </form>
 
-      <div className="mt-6">
-        <button
+      <motion.div 
+        className="mt-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.7 }}
+      >
+        <motion.button
           onClick={() => setIsLogin(!isLogin)}
-          className="w-full text-sm text-gray-600 hover:text-gray-900 transition-colors"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="w-full text-sm text-gray-600 hover:text-gray-900 transition-all duration-200 hover:bg-gray-50 py-2 rounded-lg"
         >
           {isLogin ? 
             "New to guitar lessons? Sign up now" : 
             'Already registered? Login here'}
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
     </motion.div>
   )
 } 
