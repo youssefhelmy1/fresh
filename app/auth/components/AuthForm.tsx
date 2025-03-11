@@ -29,29 +29,29 @@ export default function AuthForm() {
         body: JSON.stringify({ email, password, name }),
       })
 
-      const contentType = response.headers.get("content-type");
       let data;
-      
-      if (contentType && contentType.indexOf("application/json") !== -1) {
+      try {
         data = await response.json();
-      } else {
-        // Handle non-JSON response
-        const text = await response.text();
-        throw new Error('Invalid server response');
+      } catch (parseError) {
+        console.error('Failed to parse response:', parseError);
+        throw new Error('Server returned an invalid response. Please try again.');
       }
 
       if (!response.ok) {
-        throw new Error(data.error || 'Authentication failed')
+        throw new Error(data.error || 'Authentication failed. Please check your credentials.');
       }
 
       // Store the token in localStorage
-      localStorage.setItem('authToken', data.token)
-      
-      // Redirect to booking page
-      router.push('/booking')
+      if (data.token) {
+        localStorage.setItem('authToken', data.token);
+        // Redirect to booking page
+        router.push('/booking');
+      } else {
+        throw new Error('No authentication token received');
+      }
     } catch (err) {
-      console.error('Auth error:', err)
-      setError(err instanceof Error ? err.message : 'Authentication failed')
+      console.error('Auth error:', err);
+      setError(err instanceof Error ? err.message : 'Authentication failed. Please try again.');
     } finally {
       setLoading(false)
     }
@@ -63,6 +63,10 @@ export default function AuthForm() {
       animate={{ opacity: 1 }}
       className="bg-white p-8 rounded-2xl shadow-xl"
     >
+      <h2 className="text-2xl font-bold text-center mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+        {isLogin ? 'Welcome Back!' : 'Create Your Account'}
+      </h2>
+
       {error && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -120,16 +124,18 @@ export default function AuthForm() {
           disabled={loading}
           className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
         >
-          {loading ? 'Loading...' : isLogin ? 'Sign In' : 'Create Account'}
+          {loading ? 'Processing...' : isLogin ? 'Login' : 'Sign Up'}
         </button>
       </form>
 
       <div className="mt-6">
         <button
           onClick={() => setIsLogin(!isLogin)}
-          className="w-full text-sm text-gray-600 hover:text-gray-900"
+          className="w-full text-sm text-gray-600 hover:text-gray-900 transition-colors"
         >
-          {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+          {isLogin ? 
+            "New to guitar lessons? Sign up now" : 
+            'Already registered? Login here'}
         </button>
       </div>
     </motion.div>
