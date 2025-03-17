@@ -19,8 +19,10 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
+      "@/lib/*": ["./lib/*", "./app/lib/*"],
       "fs": ["./lib/module-resolver"],
       "path": ["./lib/module-resolver"],
       "os": ["./lib/module-resolver"],
@@ -36,6 +38,7 @@
     "next-env.d.ts",
     "app/**/*.ts",
     "app/**/*.tsx",
+    "lib/**/*.ts",
     ".next/types/**/*.ts",
     "app/types/**/*.d.ts"
   ],
