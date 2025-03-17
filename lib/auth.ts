@@ -2,8 +2,9 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { RowDataPacket } from 'mysql2/promise';
 
-// JWT secret key
+// JWT configuration
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
 // User interface
 export interface User extends RowDataPacket {
@@ -42,7 +43,7 @@ export function generateToken(user: User): string {
     email: user.email
   };
   
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign(payload, JWT_SECRET);
 }
 
 // Verify a JWT token

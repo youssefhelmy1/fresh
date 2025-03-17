@@ -12,10 +12,16 @@ const nextConfig = {
     if (Array.isArray(config.externals)) {
       config.externals.push({
         stripe: 'stripe',
+        mysql2: 'mysql2',
+        jsonwebtoken: 'jsonwebtoken',
+        bcryptjs: 'bcryptjs',
       });
     } else {
       config.externals = [{
         stripe: 'stripe',
+        mysql2: 'mysql2',
+        jsonwebtoken: 'jsonwebtoken',
+        bcryptjs: 'bcryptjs',
       }];
     }
 
