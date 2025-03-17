@@ -2,12 +2,13 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import Footer from './components/Footer'
+import Navbar from '@/components/Navbar'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Professional Guitar Lessons | Learn from an Expert',
-  description: 'Book online guitar lessons with a professional guitarist with 10 years of experience. Flexible scheduling and affordable rates.',
+  title: 'Guitar Lessons - Learn to Play Guitar',
+  description: 'Professional guitar lessons for all skill levels',
 }
 
 export default function RootLayout({
@@ -18,6 +19,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} bg-gray-50 flex flex-col min-h-screen`}>
+        <Navbar />
         <main className="flex-grow">
           {children}
         </main>

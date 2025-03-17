@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server'
 import fs from 'fs/promises'
 import path from 'path'
 import os from 'os'
+import { NextRequest } from 'next/server'
+import db from '@/lib/db'
+import { verifyToken } from '@/lib/auth'
+import { RowDataPacket } from 'mysql2/promise'
 
 // Use system temp directory instead of project directory
 const DATA_DIR = path.join(os.tmpdir(), 'guitar-lessons')
@@ -97,14 +101,51 @@ function validateBookingRequest(day: string, time: string) {
   return null
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const bookings = await getBookings()
-    return NextResponse.json(bookings)
+    // Get the authorization header
+    const authHeader = request.headers.get('authorization')
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+    
+    // Extract the token
+    const token = authHeader.split(' ')[1]
+    
+    // Verify the token
+    const payload = verifyToken(token)
+    
+    // Get the user ID from the query parameters
+    const { searchParams } = new URL(request.url)
+    const userId = searchParams.get('userId')
+    
+    // Ensure the user ID matches the token
+    if (!userId || parseInt(userId) !== payload.userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 403 }
+      )
+    }
+    
+    // Fetch the user's bookings
+    const bookings = await db.query<RowDataPacket[]>(
+      `SELECT * FROM bookings WHERE user_id = ? ORDER BY lesson_date DESC`,
+      [userId]
+    )
+    
+    // Return the bookings
+    return NextResponse.json({
+      bookings
+    })
+    
   } catch (error) {
-    console.error('Error in GET /api/bookings:', error)
+    console.error('Error fetching bookings:', error)
     return NextResponse.json(
-      { error: 'Error fetching bookings' },
+      { error: 'An error occurred while fetching bookings' },
       { status: 500 }
     )
   }
