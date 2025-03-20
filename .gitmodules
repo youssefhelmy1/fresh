@@ -1,0 +1,3 @@
+[submodule "guitar-lessons"]
+	path = guitar-lessons
+	url = https://github.com/youssefhelmy1/fresh.git 
