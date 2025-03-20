@@ -1,53 +1,49 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { verifyToken } from './app/lib/auth';
 
-// Protected routes that require authentication
-const protectedRoutes = [
+// Array of paths that require authentication
+const protectedPaths = [
   '/profile',
-  '/booking/success',
+  '/booking',
   '/api/user-bookings',
   '/api/user-bookings/create',
-]
+];
 
-// Middleware function that runs on every request
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
-
-  // Check if the route is protected
-  const isProtectedRoute = protectedRoutes.some(route => 
-    pathname.startsWith(route)
-  )
-
-  if (isProtectedRoute) {
-    // Get the authentication token from cookies
-    const token = request.cookies.get('auth_token')?.value
-
-    // If no token exists, redirect to login
-    if (!token) {
-      const url = new URL('/auth', request.url)
-      url.searchParams.set('from', pathname)
-      return NextResponse.redirect(url)
-    }
-
-    // Add the token to the Authorization header for API routes
-    if (pathname.startsWith('/api/')) {
-      const requestHeaders = new Headers(request.headers)
-      requestHeaders.set('Authorization', `Bearer ${token}`)
-      
-      return NextResponse.next({
-        request: {
-          headers: requestHeaders,
-        },
-      })
-    }
-  }
-
-  return NextResponse.next()
+// Function to check if the path is protected
+function isProtectedPath(path: string): boolean {
+  return protectedPaths.some(protectedPath => 
+    path === protectedPath || 
+    path.startsWith(`${protectedPath}/`)
+  );
 }
 
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  
+  // Check if the path is protected
+  if (isProtectedPath(pathname)) {
+    // Get the token from cookies
+    const token = request.cookies.get('authToken')?.value;
+    
+    // If there's no token or token is invalid, redirect to login
+    if (!token || !verifyToken(token)) {
+      return NextResponse.redirect(new URL('/auth', request.url));
+    }
+  }
+  
+  return NextResponse.next();
+}
+
+// See "Matching Paths" below to learn more
 export const config = {
   matcher: [
-    '/profile/:path*',
-    '/booking/:path*',
-    '/api/user-bookings/:path*',
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
-} 
+}; 

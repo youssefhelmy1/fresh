@@ -21,16 +21,7 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"],
-      "@/lib/*": ["./lib/*", "./app/lib/*"],
-      "fs": ["./lib/module-resolver"],
-      "path": ["./lib/module-resolver"],
-      "os": ["./lib/module-resolver"],
-      "crypto": ["./lib/module-resolver"],
-      "@grpc/proto-loader": ["./lib/module-resolver"],
-      "@grpc/grpc-js": ["./lib/module-resolver"],
-      "google-gax": ["./lib/module-resolver"],
-      "grpc": ["./lib/module-resolver"]
+      "@/*": ["./*"]
     },
     "typeRoots": ["./node_modules/@types", "./app/types"]
   },
@@ -38,7 +29,6 @@
     "next-env.d.ts",
     "app/**/*.ts",
     "app/**/*.tsx",
-    "lib/**/*.ts",
     ".next/types/**/*.ts",
     "app/types/**/*.d.ts"
   ],
