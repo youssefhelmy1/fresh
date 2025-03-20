@@ -1,0 +1,46 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@/lib/*": ["./lib/*", "./app/lib/*"],
+      "fs": ["./lib/module-resolver"],
+      "path": ["./lib/module-resolver"],
+      "os": ["./lib/module-resolver"],
+      "crypto": ["./lib/module-resolver"],
+      "@grpc/proto-loader": ["./lib/module-resolver"],
+      "@grpc/grpc-js": ["./lib/module-resolver"],
+      "google-gax": ["./lib/module-resolver"],
+      "grpc": ["./lib/module-resolver"]
+    },
+    "typeRoots": ["./node_modules/@types", "./app/types"]
+  },
+  "include": [
+    "next-env.d.ts",
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "lib/**/*.ts",
+    ".next/types/**/*.ts",
+    "app/types/**/*.d.ts"
+  ],
+  "exclude": ["node_modules"]
+} 
