@@ -4,7 +4,11 @@ const nextConfig = {
   images: {
     domains: ['images.unsplash.com'], // Allow images from Unsplash
   },
-  webpack: (config) => {
+  // Specify the Netlify Edge runtime
+  experimental: {
+    runtime: 'edge',
+  },
+  webpack: (config, { isServer, nextRuntime }) => {
     if (!config.externals) {
       config.externals = [];
     }
@@ -19,8 +23,19 @@ const nextConfig = {
       }];
     }
 
+    // Add polyfills for edge functions and middleware
+    if (nextRuntime === 'edge' || !isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        buffer: require.resolve('buffer/'),
+        crypto: require.resolve('crypto-browserify'),
+        stream: require.resolve('stream-browserify'),
+        util: require.resolve('util/'),
+      };
+    }
+
     return config;
   }
 }
 
-module.exports = nextConfig 
+module.exports = nextConfig
