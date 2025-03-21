@@ -33,7 +33,23 @@ export function generateToken(user: UserData): string {
 
 export function verifyToken(token: string): UserData | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as UserData;
+    // Make sure the token is a string to avoid buffer issues
+    if (typeof token !== 'string') {
+      console.error('Invalid token type:', typeof token);
+      return null;
+    }
+    
+    // Use the verify method with error handling
+    const decoded = jwt.verify(token, JWT_SECRET);
+    
+    // Ensure the decoded token has the expected structure
+    const userData = decoded as UserData;
+    if (!userData || !userData.id || !userData.email) {
+      console.error('Invalid token structure');
+      return null;
+    }
+    
+    return userData;
   } catch (error) {
     console.error('Token verification failed:', error);
     return null;

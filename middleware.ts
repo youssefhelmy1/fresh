@@ -27,7 +27,19 @@ export function middleware(request: NextRequest) {
     const token = request.cookies.get('authToken')?.value;
     
     // If there's no token or token is invalid, redirect to login
-    if (!token || !verifyToken(token)) {
+    if (!token) {
+      return NextResponse.redirect(new URL('/auth', request.url));
+    }
+    
+    try {
+      // Verify token - on failure this will throw an error and be caught
+      const isValid = verifyToken(token);
+      if (!isValid) {
+        return NextResponse.redirect(new URL('/auth', request.url));
+      }
+    } catch (error) {
+      // Handle verification errors by redirecting
+      console.error('Token verification error:', error);
       return NextResponse.redirect(new URL('/auth', request.url));
     }
   }
